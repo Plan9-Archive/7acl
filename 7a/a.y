@@ -184,7 +184,7 @@ inst:
 		outcode($1, &$4, $2, &$6);
 	}
 /*
- * RET
+ * RET/RFE/RETURN
  */
 |	LTYPEA comma
 	{
