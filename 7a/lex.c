@@ -200,6 +200,9 @@ struct
 	"LR",			LREG,	30,
 	"ZR",			LREG,	31,
 
+	"RARG",		LREG,	REGARG,
+	"RARG0",	LREG,	REGARG,
+
 	"F",		LF,	0,
 
 	"F0",		LFREG,	0,
