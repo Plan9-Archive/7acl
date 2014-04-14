@@ -202,6 +202,7 @@ struct
 
 	"RARG",		LREG,	REGARG,
 	"RARG0",	LREG,	REGARG,
+	"RSP",	LREG,	31,
 
 	"F",		LF,	0,
 
