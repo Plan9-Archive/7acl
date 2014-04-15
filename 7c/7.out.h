@@ -4,7 +4,7 @@
 
 #define	NSNAME		8
 #define	NSYM		50
-#define	NREG		31
+#define	NREG		32
 
 #define NOPROF		(1<<0)
 #define DUPOK		(1<<1)
