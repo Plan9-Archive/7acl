@@ -19,7 +19,7 @@
 %token	<lval>	LTYPE6 LTYPE7 LTYPE8 LTYPE9 LTYPEA
 %token	<lval>	LTYPEB LTYPEC LTYPED LTYPEE LTYPEF
 %token	<lval>	LTYPEG LTYPEH LTYPEI LTYPEJ LTYPEK
-%token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO
+%token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO LTYPEP
 %token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEY
 %token	<lval>	LCONST LSP LSB LFP LPC
 %token	<lval>	LTYPEX LR LREG LF LFREG LV LVREG LC LCREG LFCR
@@ -119,6 +119,10 @@ inst:
 	{
 		outcode($1, &nullgen, NREG, &$3);
 	}
+|	LTYPE6
+	{
+		outcode($1, &nullgen, NREG, &nullgen);
+	}
 /*
  * CMP
  */
@@ -175,16 +179,19 @@ inst:
 /*
  * BFM/BFI
  */
-|	LTYPEY spreg ',' imm ',' imm ',' reg
+|	LTYPEY imm ',' imm ',' spreg ',' reg
 	{
-		outcode4($1, &$4, $2, &$6, &$8);
-	}
-|	LTYPEY spreg ',' imm ',' reg
-	{
-		outcode($1, &$4, $2, &$6);
+		outcode4($1, &$2, $6, &$4, &$8);
 	}
 /*
- * RET/RFE/RETURN
+ * EXTR
+ */
+|	LTYPEP imm ',' reg ',' spreg ',' reg
+	{
+		outcode4($1, &$2, $6, &$4, &$8);
+	}
+/*
+ * RET/RETURN
  */
 |	LTYPEA comma
 	{
