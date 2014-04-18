@@ -54,11 +54,14 @@ dodata(void)
 			diag("%s: no size", s->name);
 			v = 1;
 		}
-		while(v & 3)
-			v++;
+		v = rnd(v, 4);
 		s->value = v;
 		if(v > MINSIZ)
 			continue;
+		if(v >= 16)
+			orig = rnd(orig, 16);
+		else if(v >= 8)
+			orig = rnd(orig, 8);
 		s->value = orig;
 		orig += v;
 		s->type = SDATA1;
@@ -77,6 +80,10 @@ dodata(void)
 			continue;
 		}
 		v = s->value;
+		if(v >= 16)
+			orig = rnd(orig, 16);
+		else if(v >= 8)
+			orig = rnd(orig, 8);
 		s->value = orig;
 		orig += v;
 	}
@@ -94,6 +101,10 @@ dodata(void)
 		if(s->type != SBSS)
 			continue;
 		v = s->value;
+		if(v >= 16)
+			orig = rnd(orig, 16);
+		else if(v >= 8)
+			orig = rnd(orig, 8);
 		s->value = orig;
 		orig += v;
 	}
