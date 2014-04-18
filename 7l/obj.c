@@ -173,7 +173,7 @@ main(int argc, char *argv[])
 			INITRND = 0x100000;
 		break;
 	case 7:	/* elf executable */
-		HEADR = rnd(Ehdr32sz+3*Phdr32sz, 16);
+		HEADR = rnd(Ehdr64sz+3*Phdr64sz, 16);
 		if(INITTEXT == -1)
 			INITTEXT = 4096+HEADR;
 		if(INITDAT == -1)
