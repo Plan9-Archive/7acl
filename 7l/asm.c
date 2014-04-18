@@ -160,7 +160,7 @@ asmb(void)
 		break;
 	case 7:	/* elf */
 		debug['S'] = 1;			/* symbol table */
-		elf32(ARM64, ELFDATA2LSB, 0, nil);
+		elf64(ARM64, ELFDATA2LSB, 0, nil);
 		break;
 	}
 	cflush();
