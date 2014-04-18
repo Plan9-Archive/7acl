@@ -178,7 +178,11 @@ enum
 	C_UAUTO64K,	/* 0 to 65520, 0 mod 16 */
 	C_LAUTO,		/* any other 32-bit constant */
 
-	C_SEXT,		/* 0 to 4095, direct */
+	C_SEXT1,		/* 0 to 4095, direct */
+	C_SEXT2,		/* 0 to 8190 */
+	C_SEXT4,		/* 0 to 16380 */
+	C_SEXT8,		/* 0 to 32760 */
+	C_SEXT16,	/* 0 to 65520 */
 	C_LEXT,
 
 	C_NPOREG,	/* mirror NPAUTO etc, except for ZOREG */
@@ -389,6 +393,7 @@ void	nocache(Prog*);
 void	nuxiinit(void);
 void	objfile(char*);
 int	ocmp(const void*, const void*);
+vlong	offsetshift(vlong, int);
 long	opirr(int);
 Optab*	oplook(Prog*);
 void	patch(void);
