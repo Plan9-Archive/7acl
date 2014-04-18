@@ -15,11 +15,11 @@
 %left	'<' '>'
 %left	'+' '-'
 %left	'*' '/' '%'
-%token	<lval>	LTYPE1 LTYPE2 LTYPE3 LTYPE4 LTYPE5
+%token	<lval>	LTYPE0 LTYPE1 LTYPE2 LTYPE3 LTYPE4 LTYPE5
 %token	<lval>	LTYPE6 LTYPE7 LTYPE8 LTYPE9 LTYPEA
 %token	<lval>	LTYPEB LTYPEC LTYPED LTYPEE LTYPEF
 %token	<lval>	LTYPEG LTYPEH LTYPEI LTYPEJ LTYPEK
-%token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO LTYPEP
+%token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO LTYPEP LTYPEQ
 %token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEY
 %token	<lval>	LCONST LSP LSB LFP LPC
 %token	<lval>	LTYPEX LR LREG LF LFREG LV LVREG LC LCREG LFCR
@@ -66,9 +66,16 @@ line:
 
 inst:
 /*
+ * ERET
+ */
+	LTYPE0 comma
+	{
+		outcode($1, &nullgen, NREG, &nullgen);
+	}
+/*
  * ADD
  */
-	LTYPE1 imsr ',' spreg ',' reg
+|	LTYPE1 imsr ',' spreg ',' reg
 	{
 		outcode($1, &$2, $4, &$6);
 	}
@@ -200,6 +207,29 @@ inst:
 |	LTYPEA reg
 	{
 		outcode($1, &nullgen, NREG, &$2);
+	}
+/*
+ * NOP
+ */
+|	LTYPEQ comma
+	{
+		outcode($1, &nullgen, NREG, &nullgen);
+	}
+|	LTYPEQ reg comma
+	{
+		outcode($1, &$2, NREG, &nullgen);
+	}
+|	LTYPEQ freg comma
+	{
+		outcode($1, &$2, NREG, &nullgen);
+	}
+|	LTYPEQ ',' reg
+	{
+		outcode($1, &nullgen, NREG, &$3);
+	}
+|	LTYPEQ ',' freg
+	{
+		outcode($1, &nullgen, NREG, &$3);
 	}
 /*
  * TEXT/GLOBL
