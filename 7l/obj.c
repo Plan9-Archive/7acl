@@ -1048,7 +1048,7 @@ loop:
 		}
 		goto casedef;
 
-	case AFMOVDS:
+	case AFCVTDS:
 		if(p->from.type != D_FCONST)
 			goto casedef;
 		p->as = AFMOVS;
