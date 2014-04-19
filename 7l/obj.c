@@ -1432,14 +1432,10 @@ nuxiinit(void)
 			inuxi1[i] = c;
 		inuxi4[i] = c;
 		fnuxi4[i] = c;
-		if(debug['d'] == 0){
-			fnuxi8[i] = c;
-			fnuxi8[i+4] = c+4;
-		}
-		else{
-			fnuxi8[i] = c+4;		/* ms word first, then ls, even in little endian mode */
-			fnuxi8[i+4] = c;
-		}
+		inuxi8[i] = c;
+		inuxi8[i+4] = c+4;
+		fnuxi8[i] = c;
+		fnuxi8[i+4] = c+4;
 	}
 	if(debug['v']) {
 		Bprint(&bso, "inuxi = ");
@@ -1451,6 +1447,9 @@ nuxiinit(void)
 		Bprint(&bso, " ");
 		for(i=0; i<4; i++)
 			Bprint(&bso, "%d", inuxi4[i]);
+		Bprint(&bso, " ");
+		for(i=0; i<8; i++)
+			Bprint(&bso, "%d", inuxi8[i]);
 		Bprint(&bso, "\nfnuxi = ");
 		for(i=0; i<4; i++)
 			Bprint(&bso, "%d", fnuxi4[i]);

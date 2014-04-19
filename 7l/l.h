@@ -281,6 +281,7 @@ EXTERN	char*	hunk;
 EXTERN	char	inuxi1[1];
 EXTERN	char	inuxi2[2];
 EXTERN	char	inuxi4[4];
+EXTERN	uchar	inuxi8[8];
 EXTERN	Prog*	lastp;
 EXTERN	long	lcsize;
 EXTERN	char	literal[32];
