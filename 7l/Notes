@@ -93,3 +93,5 @@ immediate, so an assembler must either generate an error for a logical instructi
 programmer-friendly assembler may transform it into some other instruction which achieves the intended result.
 
 Need 32-bit versions of load signed byte/halfword instructions?
+
+FCMPE
