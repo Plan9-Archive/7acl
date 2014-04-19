@@ -317,16 +317,15 @@ patch(void)
 				break;
 			case STEXT:
 				p->to.offset = s->value;
-				p->to.type = D_BRANCH;
 				break;
 			case SUNDEF:
 				if(p->as != ABL)
 					diag("help: SUNDEF in AB || ARET");
 				p->to.offset = 0;
-				p->to.type = D_BRANCH;
 				p->cond = UP;
 				break;
 			}
+			p->to.type = D_BRANCH;
 		}
 		if(p->to.type != D_BRANCH || p->cond == UP)
 			continue;
