@@ -580,6 +580,12 @@ datblk(long s, long n, int str)
 					l++;
 				}
 				break;
+			case 8:
+				for(; i<c; i++) {
+					buf.dbuf[l] = cast[inuxi8[i]];
+					l++;
+				}
+				break;
 			}
 			break;
 		}
