@@ -278,7 +278,7 @@ inst:
 	{
 		outcode($1, &$2, $4.reg, &$6);
 	}
-|	LTYPEL freg ',' freg comma
+|	LTYPEL frcon ',' freg comma
 	{
 		outcode($1, &$2, $4.reg, &nullgen);
 	}
