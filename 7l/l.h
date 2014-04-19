@@ -394,7 +394,6 @@ void	nuxiinit(void);
 void	objfile(char*);
 int	ocmp(const void*, const void*);
 vlong	offsetshift(vlong, int);
-long	opirr(int);
 Optab*	oplook(Prog*);
 void	patch(void);
 void	prasm(Prog*);
