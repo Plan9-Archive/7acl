@@ -357,10 +357,6 @@ enum	as
 
 	ADIV,
 	ADIVW,
-	AMOD,
-	AMODW,
-	AUMOD,
-	AUMODW,
 	AUMUL,
 	AFMOVVD,
 	AFMOVVS,
