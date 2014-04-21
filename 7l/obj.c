@@ -754,10 +754,20 @@ readsome(int f, uchar *buf, uchar *good, uchar *stop, int max)
 	return stop + n;
 }
 
+static int
+isnegoff(Prog *p)
+{
+	if(p->from.type == D_CONST &&
+	   p->from.name == D_NONE &&
+	   p->from.offset < 0)
+		return 1;
+	return 0;
+}
+
 void
 ldobj(int f, long c, char *pn)
 {
-	long ipc;
+	vlong ipc;
 	Prog *p, *t;
 	uchar *bloc, *bsize, *stop;
 	Sym *h[NSYM], *s, *di;
@@ -799,7 +809,7 @@ loop:
 	}
 	o = bloc[0] | (bloc[1] << 8);		/* as */
 	if(o <= AXXX || o >= ALAST) {
-		diag("%s: line %ld: opcode out of range %d", pn, pc-ipc, o);
+		diag("%s: line %lld: opcode out of range %d", pn, pc-ipc, o);
 		print("	probably not a .7 file\n");
 		errorexit();
 	}
@@ -1031,20 +1041,58 @@ loop:
 		break;
 
 	case ASUB:
-		if(p->from.type == D_CONST)
-		if(p->from.name == D_NONE)
-		if(p->from.offset < 0) {
+		if(isnegoff(p)){
 			p->from.offset = -p->from.offset;
 			p->as = AADD;
 		}
 		goto casedef;
 
+	case ASUBW:
+		if(isnegoff(p)){
+			p->from.offset = -p->from.offset;
+			p->as = AADDW;
+		}
+		goto casedef;
+
+	case ASUBS:
+		if(isnegoff(p)){
+			p->from.offset = -p->from.offset;
+			p->as = AADDS;
+		}
+		goto casedef;
+
+	case ASUBSW:
+		if(isnegoff(p)){
+			p->from.offset = -p->from.offset;
+			p->as = AADDSW;
+		}
+		goto casedef;
+
 	case AADD:
-		if(p->from.type == D_CONST)
-		if(p->from.name == D_NONE)
-		if(p->from.offset < 0) {
+		if(isnegoff(p)){
 			p->from.offset = -p->from.offset;
 			p->as = ASUB;
+		}
+		goto casedef;
+
+	case AADDW:
+		if(isnegoff(p)){
+			p->from.offset = -p->from.offset;
+			p->as = ASUBW;
+		}
+		goto casedef;
+
+	case AADDS:
+		if(isnegoff(p)){
+			p->from.offset = -p->from.offset;
+			p->as = ASUBS;
+		}
+		goto casedef;
+
+	case AADDSW:
+		if(isnegoff(p)){
+			p->from.offset = -p->from.offset;
+			p->as = ASUBSW;
 		}
 		goto casedef;
 
@@ -1119,6 +1167,8 @@ loop:
 
 		if(p->to.type == D_BRANCH)
 			p->to.offset += ipc;
+		if(p->from.type == D_BRANCH)
+			p->from.offset += ipc;
 		lastp->link = p;
 		lastp = p;
 		p->pc = pc;
