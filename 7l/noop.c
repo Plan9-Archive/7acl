@@ -91,6 +91,9 @@ noops(void)
 		case ABGT:
 		case ABLE:
 
+		case AADR:		/* strange */
+		case AADRP:
+
 			q1 = p->cond;
 			if(q1 != P) {
 				while(q1->as == ANOP) {
