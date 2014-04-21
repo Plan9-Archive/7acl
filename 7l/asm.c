@@ -46,7 +46,7 @@ asmb(void)
 			autosize = p->to.offset + SAVESIZE;
 		}
 		if(p->pc != pc) {
-			diag("phase error %lux sb %lux",
+			diag("phase error %llux sb %llux",
 				p->pc, pc);
 			if(!debug['a'])
 				prasm(curp);
@@ -403,7 +403,7 @@ asmlc(void)
 			if(p->as == ATEXT)
 				curtext = p;
 			if(debug['V'])
-				Bprint(&bso, "%6lux %P\n",
+				Bprint(&bso, "%6llux %P\n",
 					p->pc, p);
 			continue;
 		}
@@ -436,7 +436,7 @@ asmlc(void)
 				else
 					Bprint(&bso, " lc%ld(%d,%ld)\n",
 						s, 0, s);
-				Bprint(&bso, "%6lux %P\n",
+				Bprint(&bso, "%6llux %P\n",
 					p->pc, p);
 			}
 			lcsize += 5;
@@ -446,14 +446,14 @@ asmlc(void)
 			cput(0+s);	/* 1-64 +lc */
 			if(debug['V']) {
 				Bprint(&bso, " lc+%ld(%ld)\n", s, 0+s);
-				Bprint(&bso, "%6lux %P\n",
+				Bprint(&bso, "%6llux %P\n",
 					p->pc, p);
 			}
 		} else {
 			cput(64-s);	/* 65-128 -lc */
 			if(debug['V']) {
 				Bprint(&bso, " lc%ld(%ld)\n", s, 64-s);
-				Bprint(&bso, "%6lux %P\n",
+				Bprint(&bso, "%6llux %P\n",
 					p->pc, p);
 			}
 		}
