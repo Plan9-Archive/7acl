@@ -216,7 +216,7 @@ loop:
 			}
 			if(a == AB || a == ARETURN || a == ARET || a == AERET)
 				goto copy;
-			if(!q->cond || (q->cond->mark&FOLL))
+			if(q->cond == nil || (q->cond->mark&FOLL))
 				continue;
 			if(a != ABEQ && a != ABNE)
 				continue;
@@ -327,9 +327,14 @@ patch(void)
 			}
 			p->to.type = D_BRANCH;
 		}
-		if(p->to.type != D_BRANCH || p->cond == UP)
+		if(p->cond == UP)
 			continue;
-		c = p->to.offset;
+		if(p->to.type == D_BRANCH)
+			c = p->to.offset;
+		else if(p->from.type == D_BRANCH)
+			c = p->from.offset;
+		else
+			continue;
 		for(q = firstp; q != P;) {
 			if(q->forwd != P)
 			if(c >= q->forwd->pc) {
@@ -352,9 +357,12 @@ patch(void)
 			curtext = p;
 		if(p->cond != P && p->cond != UP) {
 			p->cond = brloop(p->cond);
-			if(p->cond != P)
-			if(p->to.type == D_BRANCH)
-				p->to.offset = p->cond->pc;
+			if(p->cond != P){
+				if(p->to.type == D_BRANCH)
+					p->to.offset = p->cond->pc;
+				if(p->from.type == D_BRANCH)
+					p->from.offset = p->cond->pc;
+			}
 		}
 	}
 }
