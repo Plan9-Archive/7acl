@@ -20,9 +20,10 @@
 %token	<lval>	LTYPEB LTYPEC LTYPED LTYPEE LTYPEF
 %token	<lval>	LTYPEG LTYPEH LTYPEI LTYPEJ LTYPEK
 %token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO LTYPEP LTYPEQ
-%token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEY
+%token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEX LTYPEY LTYPEZ
+%token	<lval>	LMOVK
 %token	<lval>	LCONST LSP LSB LFP LPC
-%token	<lval>	LTYPEX LR LREG LF LFREG LV LVREG LC LCREG LFCR
+%token	<lval>	LR LREG LF LFREG LV LVREG LC LCREG LFCR
 %token	<lval>	LCOND LS LAT LEXT LSPR LSPREG LVTYPE
 %token	<dval>	LFCONST
 %token	<sval>	LSCONST
@@ -102,6 +103,21 @@ inst:
 		outcode($1, &$2, NREG, &$4);
 	}
 /*
+ * MOVK
+ */
+|	LMOVK imm ',' reg
+	{
+		outcode($1, &$2, NREG, &$4);
+	}
+|	LMOVK imm '<' '<' con ',' reg
+	{
+		Gen g;
+		g = nullgen;
+		g.type = D_CONST;
+		g.offset = $5;
+		outcode4($1, &$2, NREG, &g, &$7);
+	}
+/*
  * B/BL
  */
 |	LTYPE4 comma rel
@@ -152,11 +168,15 @@ inst:
 		outcode($1, &$2, NREG, &$4);
 	}
 /*
- * CSEL
+ * CSEL/CINC/CNEG/CINV
  */
-|	LTYPES cond reg ',' reg ',' reg
+|	LTYPES cond ',' reg ',' reg ',' reg
 	{
-		outcode4($1, &$2, $3.reg, &$5, &$7);
+		outcode4($1, &$2, $6.reg, &$4, &$8);
+	}
+|	LTYPES cond ',' reg ',' reg
+	{
+		outcode($1, &$2, $4.reg, &$6);
 	}
 /*
  * TBZ
@@ -168,9 +188,9 @@ inst:
 /*
  * CCMN
  */
-|	LTYPEU cond imsr ',' reg ',' imm comma
+|	LTYPEU cond ',' imsr ',' reg ',' imm comma
 	{
-		outcode4($1, &$2, $3.reg, &$5, &$7);
+		outcode4($1, &$2, $6.reg, &$4, &$8);
 	}
 /*
  * ADR
@@ -270,6 +290,9 @@ inst:
 	{
 		outcode($1, &$2, NREG, &$4);
 	}
+/*
+ * FADDD
+ */
 |	LTYPEK frcon ',' freg
 	{
 		outcode($1, &$2, NREG, &$4);
@@ -278,10 +301,23 @@ inst:
 	{
 		outcode($1, &$2, $4.reg, &$6);
 	}
+/*
+ * FCMP
+ */
 |	LTYPEL frcon ',' freg comma
 	{
 		outcode($1, &$2, $4.reg, &nullgen);
 	}
+/*
+ * FCCMP
+ */
+|	LTYPEF cond ',' freg ',' freg ',' imm comma
+	{
+		outcode4($1, &$2, $6.reg, &$4, &$8);
+	}
+/*
+ * FMULA
+ */
 |	LTYPE9 freg ',' freg ', ' freg ',' freg comma
 	{
 		outcode4($1, &$2, $4.reg, &$6, &$8);
@@ -307,9 +343,9 @@ inst:
 /*
  * MADD Rn,Rm,Ra,Rd
  */
-|	LTYPEM reg ',' sreg ',' reg ',' reg
+|	LTYPEM reg ',' reg ',' sreg ',' reg
 	{
-		outcode4($1, &$2, $4, &$6, &$8);
+		outcode4($1, &$2, $6, &$4, &$8);
 	}
 /*
  * SYS/SYSL
