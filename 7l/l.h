@@ -67,7 +67,7 @@ struct	Prog
 	} u0;
 	Prog*	cond;
 	Prog*	link;
-	long	pc;
+	vlong	pc;
 	long	line;
 	uchar	mark;
 	uchar	optab;
@@ -293,7 +293,7 @@ EXTERN	vlong	instoffset;
 EXTERN	Opcross	opcross[8];
 EXTERN	Oprang	oprange[ALAST];
 EXTERN	char*	outfile;
-EXTERN	long	pc;
+EXTERN	vlong	pc;
 EXTERN	uchar	repop[ALAST];
 EXTERN	long	symsize;
 EXTERN	Prog*	textp;
