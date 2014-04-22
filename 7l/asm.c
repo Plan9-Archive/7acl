@@ -2,7 +2,9 @@
 
 long	OFFSET;
 
-long
+#define PADDR(a)	((a) & ~0xfffffffff0000000ull)
+
+vlong
 entryvalue(void)
 {
 	char *a;
@@ -31,7 +33,8 @@ void
 asmb(void)
 {
 	Prog *p;
-	long t, etext;
+	long magic, t, etext;
+	vlong vl;
 	Optab *o;
 
 	if(debug['v'])
@@ -146,17 +149,20 @@ asmb(void)
 	case 6:	/* no header, padded segments */
 		break;
 	case 2:	/* plan 9 */
+		magic = 4*28*28+7;
+		magic |= 0x00008000;		/* fat header */
 		if(dlm)
-			lput(0x80000000|0x647);	/* magic */
-		else
-			lput(0x647);			/* magic */
+			magic |= 0x80000000;	/* dlm */
+		lput(magic);			/* magic */
 		lput(textsize);			/* sizes */
 		lput(datsize);
 		lput(bsssize);
 		lput(symsize);			/* nsyms */
-		lput(entryvalue());		/* va of entry */
+		vl = entryvalue();
+		lput(PADDR(vl));		/* va of entry */
 		lput(0L);
 		lput(lcsize);
+		llput(vl);			/* va of entry */
 		break;
 	case 7:	/* elf */
 		debug['S'] = 1;			/* symbol table */
@@ -343,12 +349,21 @@ asmsym(void)
 }
 
 void
-putsymb(char *s, int t, long v, int ver)
+putsymb(char *s, int t, vlong v, int ver)
 {
-	int i, f;
+	int i, f, l;
 
 	if(t == 'f')
 		s++;
+	l = 4;
+	switch(HEADTYPE){
+	default:
+		break;
+	case 2:
+		lput(v>>32);
+		l = 8;
+		break;
+	}
 	lput(v);
 	if(ver)
 		t += 'a' - 'A';
@@ -369,11 +384,11 @@ putsymb(char *s, int t, long v, int ver)
 			cput(s[i]);
 		cput(0);
 	}
-	symsize += 4 + 1 + i + 1;
+	symsize += l + 1 + i + 1;
 
 	if(debug['n']) {
 		if(t == 'z' || t == 'Z') {
-			Bprint(&bso, "%c %.8lux ", t, v);
+			Bprint(&bso, "%c %.8llux ", t, v);
 			for(i=1; s[i] != 0 || s[i+1] != 0; i+=2) {
 				f = ((s[i]&0xff) << 8) | (s[i+1]&0xff);
 				Bprint(&bso, "/%x", f);
@@ -382,9 +397,9 @@ putsymb(char *s, int t, long v, int ver)
 			return;
 		}
 		if(ver)
-			Bprint(&bso, "%c %.8lux %s<%d>\n", t, v, s, ver);
+			Bprint(&bso, "%c %.8llux %s<%d>\n", t, v, s, ver);
 		else
-			Bprint(&bso, "%c %.8lux %s\n", t, v, s);
+			Bprint(&bso, "%c %.8llux %s\n", t, v, s);
 	}
 }
 
