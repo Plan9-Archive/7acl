@@ -420,10 +420,10 @@ brloop(Prog *p)
 	return P;
 }
 
-long
+vlong
 atolwhex(char *s)
 {
-	long n;
+	vlong n;
 	int f;
 
 	n = 0;
