@@ -60,8 +60,8 @@ Optab	optab[] =
 
 	{ ABEQ,	C_NONE,	C_NONE,	C_SBRA,		 7, 4, 0 },
 
-	{ ALSL,		C_LCON,	C_REG,	C_REG,		 8, 4, 0 },  // 
-	{ ALSL,		C_LCON,	C_NONE,	C_REG,		 8, 4, 0 },  // 
+	{ ALSL,		C_LCON,	C_REG,	C_REG,		 8, 4, 0 },
+	{ ALSL,		C_LCON,	C_NONE,	C_REG,		 8, 4, 0 },
 
 	{ ALSL,		C_REG,	C_NONE,	C_REG,		 9, 4, 0 },
 	{ ALSL,		C_REG,	C_REG,	C_REG,		 9, 4, 0 },
