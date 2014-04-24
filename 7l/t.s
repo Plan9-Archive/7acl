@@ -1,4 +1,5 @@
 TEXT	_main(SB), $0
+	MOV	$setSB(SB), R28
 	MOV	a+8(FP), R1
 	MOV	b-8(FP), R2
 	ADD	R1, R2, R0
@@ -70,6 +71,19 @@ TEXT	_excdeb(SB), $-4
 	CLREX
 	CLREX	$0x7
 	DRPS
+
+	DMB	$0
+	DMB	$5
+	DSB	$7
+	DSB	$0xF
+	ISB	$8
+	ISB	$9
+	RETURN
+
+TEXT	_sysmsr(SB), $-4
+	SYS	R5, 1, 2, 3, 4
+	SYS	1, 2, 3, 4
+	SYSL	1, 2, 3, 4, R5
 	RETURN
 
 TEXT _movwide(SB), $-4
