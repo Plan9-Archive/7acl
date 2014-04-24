@@ -10,6 +10,7 @@ void 	flushpool(Prog*, int);
 long	pcldr(long, int);
 
 static Optab *badop;
+static Oprang	oprange[ALAST];
 
 void
 span(void)
@@ -769,6 +770,7 @@ void
 buildop(void)
 {
 	int i, n, r;
+	Oprang t;
 
 	for(i=0; i<C_GOK; i++)
 		for(n=0; n<C_GOK; n++)
@@ -785,200 +787,200 @@ buildop(void)
 		oprange[r].stop = optab+i;
 		i--;
 
-		switch(r)
-		{
+		t = oprange[r];
+		switch(r){
 		default:
 			diag("unknown op in build: %A", r);
 			errorexit();
 		case AXXX:
 			break;
 		case AADD:
-			oprange[AADDS] = oprange[r];
-			oprange[ASUB] = oprange[r];
-			oprange[ASUBS] = oprange[r];
-			oprange[AADDW] = oprange[r];
-			oprange[AADDSW] = oprange[r];
-			oprange[ASUBW] = oprange[r];
-			oprange[ASUBSW] = oprange[r];
+			oprange[AADDS] = t;
+			oprange[ASUB] = t;
+			oprange[ASUBS] = t;
+			oprange[AADDW] = t;
+			oprange[AADDSW] = t;
+			oprange[ASUBW] = t;
+			oprange[ASUBSW] = t;
 			break;
 		case AAND:
-			oprange[AEOR] = oprange[r];
-			oprange[ASUB] = oprange[r];
-			oprange[AORR] = oprange[r];
-			oprange[ABIC] = oprange[r];
+			oprange[AEOR] = t;
+			oprange[ASUB] = t;
+			oprange[AORR] = t;
+			oprange[ABIC] = t;
 			break;
 		case AADC:	/* rn=Rd */
-			oprange[AADCW] = oprange[r];
-			oprange[AADCS] = oprange[r];
-			oprange[AADCSW] = oprange[r];
-			oprange[ASBC] = oprange[r];
-			oprange[ASBCW] = oprange[r];
-			oprange[ASBCS] = oprange[r];
-			oprange[ASBCSW] = oprange[r];
+			oprange[AADCW] = t;
+			oprange[AADCS] = t;
+			oprange[AADCSW] = t;
+			oprange[ASBC] = t;
+			oprange[ASBCW] = t;
+			oprange[ASBCS] = t;
+			oprange[ASBCSW] = t;
 			break;
 		case ANGC:	/* rn=REGZERO */
-			oprange[ANGCW] = oprange[r];
-			oprange[ANGCS] = oprange[r];
-			oprange[ANGCSW] = oprange[r];
+			oprange[ANGCW] = t;
+			oprange[ANGCS] = t;
+			oprange[ANGCSW] = t;
 			break;
 		case ACMP:
-			oprange[ACMPW] = oprange[r];
-//			oprange[ATST] = oprange[r];
-//			oprange[ATEQ] = oprange[r];
-//			oprange[ACMN] = oprange[r];
+			oprange[ACMPW] = t;
+//			oprange[ATST] = t;
+//			oprange[ATEQ] = t;
+//			oprange[ACMN] = t;
 			break;
 		case AMVN:
 			break;
 		case AMOVK:
-			oprange[AMOVKW] = oprange[r];
-			oprange[AMOVN] = oprange[r];
-			oprange[AMOVNW] = oprange[r];
-			oprange[AMOVZ] = oprange[r];
-			oprange[AMOVZW] = oprange[r];
+			oprange[AMOVKW] = t;
+			oprange[AMOVN] = t;
+			oprange[AMOVNW] = t;
+			oprange[AMOVZ] = t;
+			oprange[AMOVZW] = t;
 			break;
 		case ABEQ:
-			oprange[ABNE] = oprange[r];
-			oprange[ABCS] = oprange[r];
-			oprange[ABHS] = oprange[r];
-			oprange[ABCC] = oprange[r];
-			oprange[ABLO] = oprange[r];
-			oprange[ABMI] = oprange[r];
-			oprange[ABPL] = oprange[r];
-			oprange[ABVS] = oprange[r];
-			oprange[ABVC] = oprange[r];
-			oprange[ABHI] = oprange[r];
-			oprange[ABLS] = oprange[r];
-			oprange[ABGE] = oprange[r];
-			oprange[ABLT] = oprange[r];
-			oprange[ABGT] = oprange[r];
-			oprange[ABLE] = oprange[r];
+			oprange[ABNE] = t;
+			oprange[ABCS] = t;
+			oprange[ABHS] = t;
+			oprange[ABCC] = t;
+			oprange[ABLO] = t;
+			oprange[ABMI] = t;
+			oprange[ABPL] = t;
+			oprange[ABVS] = t;
+			oprange[ABVC] = t;
+			oprange[ABHI] = t;
+			oprange[ABLS] = t;
+			oprange[ABGE] = t;
+			oprange[ABLT] = t;
+			oprange[ABGT] = t;
+			oprange[ABLE] = t;
 			break;
 		case ALSL:
-			oprange[ALSLW] = oprange[r];
-			oprange[ALSR] = oprange[r];
-			oprange[ALSRW] = oprange[r];
-			oprange[AASR] = oprange[r];
-			oprange[AASRW] = oprange[r];
-			oprange[AROR] = oprange[r];
-			oprange[ARORW] = oprange[r];
+			oprange[ALSLW] = t;
+			oprange[ALSR] = t;
+			oprange[ALSRW] = t;
+			oprange[AASR] = t;
+			oprange[AASRW] = t;
+			oprange[AROR] = t;
+			oprange[ARORW] = t;
 			break;
 		case ACLS:
-			oprange[ACLSW] = oprange[r];
-			oprange[ACLZ] = oprange[r];
-			oprange[ACLZW] = oprange[r];
-			oprange[ARBIT] = oprange[r];
-			oprange[ARBITW] = oprange[r];
-			oprange[AREV] = oprange[r];
-			oprange[AREVW] = oprange[r];
-			oprange[AREV16] = oprange[r];
-			oprange[AREV16W] = oprange[r];
-			oprange[AREV32] = oprange[r];
+			oprange[ACLSW] = t;
+			oprange[ACLZ] = t;
+			oprange[ACLZW] = t;
+			oprange[ARBIT] = t;
+			oprange[ARBITW] = t;
+			oprange[AREV] = t;
+			oprange[AREVW] = t;
+			oprange[AREV16] = t;
+			oprange[AREV16W] = t;
+			oprange[AREV32] = t;
 			break;
 		case ASDIV:
-			oprange[ASDIVW] = oprange[r];
-			oprange[AUDIV] = oprange[r];
-			oprange[AUDIVW] = oprange[r];
-			oprange[ACRC32B] = oprange[r];
-			oprange[ACRC32CB] = oprange[r];
-			oprange[ACRC32CH] = oprange[r];
-			oprange[ACRC32CW] = oprange[r];
-			oprange[ACRC32CX] = oprange[r];
-			oprange[ACRC32H] = oprange[r];
-			oprange[ACRC32W] = oprange[r];
-			oprange[ACRC32X] = oprange[r];
+			oprange[ASDIVW] = t;
+			oprange[AUDIV] = t;
+			oprange[AUDIVW] = t;
+			oprange[ACRC32B] = t;
+			oprange[ACRC32CB] = t;
+			oprange[ACRC32CH] = t;
+			oprange[ACRC32CW] = t;
+			oprange[ACRC32CX] = t;
+			oprange[ACRC32H] = t;
+			oprange[ACRC32W] = t;
+			oprange[ACRC32X] = t;
 			break;
 		case AMADD:
-			oprange[AMADDW] = oprange[r];
-			oprange[AMSUB] = oprange[r];
-			oprange[AMSUBW] = oprange[r];
-			oprange[ASMADDL] = oprange[r];
-			oprange[ASMSUBL] = oprange[r];
-			oprange[ASMULH] = oprange[r];
-			oprange[AUMADDL] = oprange[r];
-			oprange[AUMSUBL] = oprange[r];
+			oprange[AMADDW] = t;
+			oprange[AMSUB] = t;
+			oprange[AMSUBW] = t;
+			oprange[ASMADDL] = t;
+			oprange[ASMSUBL] = t;
+			oprange[ASMULH] = t;
+			oprange[AUMADDL] = t;
+			oprange[AUMSUBL] = t;
 			break;
 		case AREM:
-			oprange[AREMW] = oprange[r];
-			oprange[AUREM] = oprange[r];
-			oprange[AUREMW] = oprange[r];
+			oprange[AREMW] = t;
+			oprange[AUREM] = t;
+			oprange[AUREMW] = t;
 			break;
 		case AMUL:
-			oprange[AMULW] = oprange[r];
-			oprange[AMNEG] = oprange[r];
-			oprange[AMNEGW] = oprange[r];
-			oprange[ASMNEGL] = oprange[r];
-			oprange[ASMULL] = oprange[r];
-			oprange[ASMULH] = oprange[r];
-			oprange[AUMNEGL] = oprange[r];
-			oprange[AUMULH] = oprange[r];
-			oprange[AUMULL] = oprange[r];
+			oprange[AMULW] = t;
+			oprange[AMNEG] = t;
+			oprange[AMNEGW] = t;
+			oprange[ASMNEGL] = t;
+			oprange[ASMULL] = t;
+			oprange[ASMULH] = t;
+			oprange[AUMNEGL] = t;
+			oprange[AUMULH] = t;
+			oprange[AUMULL] = t;
 			break;
 		case AMOVH:
-			oprange[AMOVHU] = oprange[r];
+			oprange[AMOVHU] = t;
 			break;
 		case AMOVW:
-			oprange[AMOVWU] = oprange[r];
+			oprange[AMOVWU] = t;
 			break;
 		case ABFM:
-			oprange[ABFMW] = oprange[r];
-			oprange[ASBFM] = oprange[r];
-			oprange[ASBFMW] = oprange[r];
-			oprange[AUBFM] = oprange[r];
-			oprange[AUBFMW] = oprange[r];
+			oprange[ABFMW] = t;
+			oprange[ASBFM] = t;
+			oprange[ASBFMW] = t;
+			oprange[AUBFM] = t;
+			oprange[AUBFMW] = t;
 			break;
 		case ABFI:
-			oprange[ABFIW] = oprange[r];
-			oprange[ABFXIL] = oprange[r];
-			oprange[ABFXILW] = oprange[r];
-			oprange[ASBFIZ] = oprange[r];
-			oprange[ASBFIZW] = oprange[r];
-			oprange[ASBFX] = oprange[r];
-			oprange[ASBFXW] = oprange[r];
-			oprange[AUBFIZ] = oprange[r];
-			oprange[AUBFIZW] = oprange[r];
-			oprange[AUBFX] = oprange[r];
-			oprange[AUBFXW] = oprange[r];
+			oprange[ABFIW] = t;
+			oprange[ABFXIL] = t;
+			oprange[ABFXILW] = t;
+			oprange[ASBFIZ] = t;
+			oprange[ASBFIZW] = t;
+			oprange[ASBFX] = t;
+			oprange[ASBFXW] = t;
+			oprange[AUBFIZ] = t;
+			oprange[AUBFIZW] = t;
+			oprange[AUBFX] = t;
+			oprange[AUBFXW] = t;
 			break;
 		case AEXTR:
-			oprange[AEXTRW] = oprange[r];
+			oprange[AEXTRW] = t;
 			break;
 		case ASXTB:
-			oprange[ASXTBW] = oprange[r];
-			oprange[ASXTH] = oprange[r];
-			oprange[ASXTHW] = oprange[r];
-			oprange[ASXTW] = oprange[r];
-			oprange[AUXTB] = oprange[r];
-			oprange[AUXTH] = oprange[r];
-			oprange[AUXTW] = oprange[r];
-			oprange[AUXTBW] = oprange[r];
-			oprange[AUXTHW] = oprange[r];
+			oprange[ASXTBW] = t;
+			oprange[ASXTH] = t;
+			oprange[ASXTHW] = t;
+			oprange[ASXTW] = t;
+			oprange[AUXTB] = t;
+			oprange[AUXTH] = t;
+			oprange[AUXTW] = t;
+			oprange[AUXTBW] = t;
+			oprange[AUXTHW] = t;
 			break;
 		case ACCMN:
-			oprange[ACCMNW] = oprange[r];
-			oprange[ACCMP] = oprange[r];
-			oprange[ACCMPW] = oprange[r];
+			oprange[ACCMNW] = t;
+			oprange[ACCMP] = t;
+			oprange[ACCMPW] = t;
 			break;
 		case ACSEL:
-			oprange[ACSELW] = oprange[r];
-			oprange[ACSINC] = oprange[r];
-			oprange[ACSINCW] = oprange[r];
-			oprange[ACSINV] = oprange[r];
-			oprange[ACSINVW] = oprange[r];
-			oprange[ACSNEG] = oprange[r];
-			oprange[ACSNEGW] = oprange[r];
+			oprange[ACSELW] = t;
+			oprange[ACSINC] = t;
+			oprange[ACSINCW] = t;
+			oprange[ACSINV] = t;
+			oprange[ACSINVW] = t;
+			oprange[ACSNEG] = t;
+			oprange[ACSNEGW] = t;
 			// aliases Rm=Rn, !cond
-			oprange[ACINC] = oprange[r];
-			oprange[ACINCW] = oprange[r];
-			oprange[ACINV] = oprange[r];
-			oprange[ACINVW] = oprange[r];
-			oprange[ACNEG] = oprange[r];
-			oprange[ACNEGW] = oprange[r];
+			oprange[ACINC] = t;
+			oprange[ACINCW] = t;
+			oprange[ACINV] = t;
+			oprange[ACINVW] = t;
+			oprange[ACNEG] = t;
+			oprange[ACNEGW] = t;
 			break;
 		case ACSET:
 			// aliases, Rm=Rn=REGZERO, !cond
-			oprange[ACSETW] = oprange[r];
-			oprange[ACSETM] = oprange[r];
-			oprange[ACSETMW] = oprange[r];
+			oprange[ACSETW] = t;
+			oprange[ACSETM] = t;
+			oprange[ACSETMW] = t;
 			break;
 		case AMOV:
 		case AMOVB:
@@ -993,56 +995,56 @@ buildop(void)
 		case ABCASE:
 			break;
 		case AERET:
-			oprange[ANOP] = oprange[r];
-			oprange[AWFE] = oprange[r];
-			oprange[AWFI] = oprange[r];
-			oprange[AYIELD] = oprange[r];
-			oprange[ASEV] = oprange[r];
-			oprange[ASEVL] = oprange[r];
+			oprange[ANOP] = t;
+			oprange[AWFE] = t;
+			oprange[AWFI] = t;
+			oprange[AYIELD] = t;
+			oprange[ASEV] = t;
+			oprange[ASEVL] = t;
+			oprange[ADRPS] = t;
 			break;
 		case ACBZ:
-			oprange[ACBZW] = oprange[r];
-			oprange[ACBNZ] = oprange[r];
-			oprange[ACBNZW] = oprange[r];
+			oprange[ACBZW] = t;
+			oprange[ACBNZ] = t;
+			oprange[ACBNZW] = t;
 			break;
 		case ATBZ:
-			oprange[ATBNZ] = oprange[r];
+			oprange[ATBNZ] = t;
 			break;
 		case AADR:
 		case AADRP:
 			break;
 		case ACLREX:
-			oprange[ADRPS] = oprange[r];
 			break;
 		case ASVC:
-			oprange[AHLT] = oprange[r];
-			oprange[AHVC] = oprange[r];
-			oprange[ASMC] = oprange[r];
-			oprange[ABRK] = oprange[r];
-			oprange[ADCPS1] = oprange[r];
-			oprange[ADCPS2] = oprange[r];
-			oprange[ADCPS3] = oprange[r];
+			oprange[AHLT] = t;
+			oprange[AHVC] = t;
+			oprange[ASMC] = t;
+			oprange[ABRK] = t;
+			oprange[ADCPS1] = t;
+			oprange[ADCPS2] = t;
+			oprange[ADCPS3] = t;
 			break;
 		case AFADDS:
-			oprange[AFADDD] = oprange[r];
-			oprange[AFSUBS] = oprange[r];
-			oprange[AFSUBD] = oprange[r];
-			oprange[AFMULS] = oprange[r];
-			oprange[AFMULD] = oprange[r];
-			oprange[AFDIVS] = oprange[r];
-			oprange[AFDIVD] = oprange[r];
-			oprange[AFCVTSD] = oprange[r];
-			oprange[AFCVTDS] = oprange[r];
+			oprange[AFADDD] = t;
+			oprange[AFSUBS] = t;
+			oprange[AFSUBD] = t;
+			oprange[AFMULS] = t;
+			oprange[AFMULD] = t;
+			oprange[AFDIVS] = t;
+			oprange[AFDIVD] = t;
+			oprange[AFCVTSD] = t;
+			oprange[AFCVTDS] = t;
 			break;
 		case AFCMPS:
-			oprange[AFCMPD] = oprange[r];
-			oprange[AFCMPES] = oprange[r];
-			oprange[AFCMPED] = oprange[r];
+			oprange[AFCMPD] = t;
+			oprange[AFCMPES] = t;
+			oprange[AFCMPED] = t;
 			break;
 		case AFCCMPS:
-			oprange[AFCCMPD] = oprange[r];
-			oprange[AFCCMPES] = oprange[r];
-			oprange[AFCCMPED] = oprange[r];
+			oprange[AFCCMPD] = t;
+			oprange[AFCCMPES] = t;
+			oprange[AFCCMPED] = t;
 			break;
 
 		case AFMOVS:
@@ -1050,22 +1052,31 @@ buildop(void)
 			break;
 
 		case AFCVTZSD:
-			oprange[AFCVTZSDW] = oprange[r];
-			oprange[AFCVTZSS] = oprange[r];
-			oprange[AFCVTZSSW] = oprange[r];
-			oprange[AFCVTZUD] = oprange[r];
-			oprange[AFCVTZUDW] = oprange[r];
-			oprange[AFCVTZUS] = oprange[r];
-			oprange[AFCVTZUSW] = oprange[r];
+			oprange[AFCVTZSDW] = t;
+			oprange[AFCVTZSS] = t;
+			oprange[AFCVTZSSW] = t;
+			oprange[AFCVTZUD] = t;
+			oprange[AFCVTZUDW] = t;
+			oprange[AFCVTZUS] = t;
+			oprange[AFCVTZUSW] = t;
 			break;
 		case ASCVTFD:
-			oprange[ASCVTFS] = oprange[r];
-			oprange[ASCVTFWD] = oprange[r];
-			oprange[ASCVTFWS] = oprange[r];
-			oprange[AUCVTFD] = oprange[r];
-			oprange[AUCVTFS] = oprange[r];
-			oprange[AUCVTFWD] = oprange[r];
-			oprange[AUCVTFWS] = oprange[r];
+			oprange[ASCVTFS] = t;
+			oprange[ASCVTFWD] = t;
+			oprange[ASCVTFWS] = t;
+			oprange[AUCVTFD] = t;
+			oprange[AUCVTFS] = t;
+			oprange[AUCVTFWD] = t;
+			oprange[AUCVTFWS] = t;
+			break;
+
+		case ASYS:
+		case ASYSL:
+			break;
+
+		case ADMB:
+			oprange[ADSB] = t;
+			oprange[AISB] = t;
 			break;
 
 		case AMRS:
