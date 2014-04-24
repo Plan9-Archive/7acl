@@ -266,8 +266,8 @@ Optab	optab[] =
 	{ AMOV,		C_REG,	C_NONE,	C_SPR,		36, 4, 0 },  // 
 	{ AMSR,		C_REG,	C_NONE,	C_SPR,		36, 4, 0 },
 
-	{ AMOV,		C_RCON,	C_NONE,	C_SPR,		37, 4, 0 },
-	{ AMSR,		C_RCON,	C_NONE,	C_SPR,		37, 4, 0 },
+	{ AMOV,		C_LCON,	C_NONE,	C_SPR,		37, 4, 0 },
+	{ AMSR,		C_LCON,	C_NONE,	C_SPR,		37, 4, 0 },
 
 	{ AERET,		C_NONE,	C_NONE,	C_NONE,		41, 4, 0 },
 
@@ -336,6 +336,12 @@ Optab	optab[] =
 
 	{ ACBZ,		C_REG,	C_NONE,	C_SBRA,		39, 4, 0 },
 	{ ATBZ,		C_LCON,	C_REG,	C_SBRA,		40, 4, 0 },
+
+	{ ASYS,		C_LCON,	C_NONE,	C_NONE,		50, 4, 0 },
+	{ ASYS,		C_LCON,	C_REG,	C_NONE,		50, 4, 0 },
+	{ ASYSL,		C_LCON,	C_NONE,	C_REG,		50, 4, 0 },
+
+	{ ADMB,		C_LCON,	C_NONE, 	C_NONE,		51, 4, 0 },
 
 	{ AXXX,		C_NONE,	C_NONE,	C_NONE,		 0, 4, 0 },
 };
