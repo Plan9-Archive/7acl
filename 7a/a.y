@@ -21,7 +21,7 @@
 %token	<lval>	LTYPEG LTYPEH LTYPEI LTYPEJ LTYPEK
 %token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO LTYPEP LTYPEQ
 %token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEX LTYPEY LTYPEZ
-%token	<lval>	LMOVK
+%token	<lval>	LMOVK LDMB
 %token	<lval>	LCONST LSP LSB LFP LPC
 %token	<lval>	LR LREG LF LFREG LV LVREG LC LCREG LFCR
 %token	<lval>	LCOND LS LAT LEXT LSPR LSPREG LVTYPE
@@ -355,24 +355,31 @@ inst:
 		Gen g;
 		g = nullgen;
 		g.type = D_CONST;
-		g.offset = ($8<<24)|($6<<16)|($4<<8)|$2;
-		outcode($1, &nullgen, NREG, &g);
+		g.offset = ($2<<24)|($4<<16)|($6<<8)|$8;	/* op1, CRn, CRm, op2 */
+		outcode($1, &g, NREG, &nullgen);
 	}
 |	LTYPEN reg ',' con ',' con ',' con ',' con
 	{
 		Gen g;
 		g = nullgen;
 		g.type = D_CONST;
-		g.offset = ($10<<24)|($8<<16)|($6<<8)|$4;
-		outcode($1, &$2, NREG, &g);
+		g.offset = ($4<<24)|($6<<16)|($8<<8)|$10;
+		outcode($1, &g, $2.reg, &nullgen);
 	}
 |	LTYPEO con ',' con ',' con ',' con ',' reg
 	{
 		Gen g;
 		g = nullgen;
 		g.type = D_CONST;
-		g.offset = ($8<<24)|($6<<16)|($4<<8)|$2;
+		g.offset = ($2<<24)|($4<<16)|($6<<8)|$8;
 		outcode($1, &g, NREG, &$10);
+	}
+/*
+ * DMB
+ */
+|	LDMB imm
+	{
+		outcode($1, &$2, NREG, &nullgen);
 	}
 /*
  * END
