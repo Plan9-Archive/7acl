@@ -70,7 +70,7 @@ struct	Prog
 	vlong	pc;
 	long	line;
 	uchar	mark;
-	uchar	optab;
+	ushort	optab;
 	ushort	as;
 	uchar	reg;
 };
@@ -291,7 +291,6 @@ EXTERN	int	nerrors;
 EXTERN	long	nhunk;
 EXTERN	vlong	instoffset;
 EXTERN	Opcross	opcross[8];
-EXTERN	Oprang	oprange[ALAST];
 EXTERN	char*	outfile;
 EXTERN	vlong	pc;
 EXTERN	uchar	repop[ALAST];
