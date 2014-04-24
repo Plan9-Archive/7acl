@@ -11,8 +11,9 @@
 #define	OPDP3(sf,op54,op31,o0)	((sf)<<31 | (op54)<<29 | 0x1B<<24 | (op31)<<21 | (o0)<<15)
 #define	OPBcc(x)		(0x2A<<25 | 0<<24 | 0<<4 | ((x)&15))
 #define	OPBLR(x)		(0x6B<<25 | 0<<23 | (x)<<21 | 0x1F<<16 | 0<<10)	/* x=0, JMP; 1, CALL; 2, RET */
-#define	SYSOP(l,op0,op1,crn,crm,op2,rt)	(0xD5030000 | (op0)<<19 | (op1)<<16 | (l)<<21 | (crn)<<12 | (crm)<<8 | (op2)<<5 | 0x1F)
+#define	SYSOP(l,op0,op1,crn,crm,op2,rt)	(0x354<<22 | (l)<<21 | (op0)<<19 | (op1)<<16 | (crn)<<12 | (crm)<<8 | (op2)<<5 | (rt))
 #define	SYSHINT(x)	SYSOP(0,0,3,2,0,(x),0x1F)
+#define	EXTR(v,offset,mask)	(((v)>>(offset))&(mask))
 
 #define	LDSTR12U(sz,v,opc)	((sz)<<30 | 7<<27 | (v)<<26 | 1<<24 | (opc)<<22)
 #define	LDSTR9S(sz,v,opc)	((sz)<<30 | 7<<27 | (v)<<26 | 0<<24 | (opc)<<22)
@@ -481,17 +482,16 @@ asmout(Prog *p, Optab *o)
 		break;
 
 	case 36:	/* mov R,PSR */
-		o1 = (2<<23) | (0x29f<<12) | (0<<4);
-		o1 |= (p->to.reg & 1) << 22;
+		o1 = oprrr(AMSR);
+		o1 |= (p->to.reg & 1) << 19;
 		o1 |= p->from.reg << 0;
 		break;
 
 	case 37:	/* mov $con,PSTATEfield -> MSR [immediate] */
-		aclass(&p->from);
-		if((instoffset&0xF) != 0)
+		if((p->from.offset&~(uvlong)0xF) != 0)
 			diag("illegal immediate for PSTATE field\n%P", p);
 		o1 = opirr(AMSR);
-		o1 |= (instoffset&0xF) << 8;
+		o1 |= (p->from.offset&0xF) << 8;	/* Crm */
 		v = 0;
 		if(p->to.reg >= nelem(pstatefield) || (v = pstatefield[p->to.reg]) == 0)
 			diag("illegal PSTATE field for immediate move\n%P", p);
@@ -500,7 +500,7 @@ asmout(Prog *p, Optab *o)
 
 	case 38:	/* clrex [$imm] */
 		o1 = opimm(p->as);
-		if(p->to.type != D_NONE)
+		if(p->to.type == D_NONE)
 			o1 |= 0xF<<8;
 		else
 			o1 |= (p->to.offset & 0xF)<<8;
@@ -578,14 +578,33 @@ asmout(Prog *p, Optab *o)
 		}
 		break;
 
-	case 46:
+	case 46:	/* cls */
 		o1 = opbit(p->as);
 		o1 |= p->from.reg<<5;
 		o1 |= p->to.reg;
 		break;
 
-	case 50:	/* unused */
-	case 51:	/* unused */
+	case 50:	/* sys/sysl */
+		o1 = opirr(p->as);
+		v = p->from.offset;
+		o1 |= EXTR(v, 24, 0x7)<<16;	/* op1 */
+		o1 |= EXTR(v, 16, 0xF)<<12;	/* CRn */
+		o1 |= EXTR(v, 8, 0xF)<<8;		/* CRm */
+		o1 |= EXTR(v, 0, 0x7)<<5;		/* op2 */
+		if(p->to.type == D_REG)
+			o1 |= p->to.reg;
+		else if(p->reg != NREG)
+			o1 |= p->reg;
+		else
+			o1 |= 0x1F;
+		break;
+
+	case 51:	/* dmb */
+		o1 = opirr(p->as);
+		if(p->from.type == D_CONST)
+			o1 |= (p->from.offset&0xF)<<8;
+		break;
+
 	case 52:	/* unused */
 	case 53:	/* unused */
 		break;
@@ -847,8 +866,8 @@ oprrr(int a)
 	case AMNEGW:
 	case AMSUBW:	return S32 | 0<<29 | 0x1B<<24 | 0<<21 | 1<<15;
 
-	case AMRS:	return 0x354<<22 | 1<<21 | 1<<20;
-	case AMSR:	return 0x354<<22 | 0<<21 | 1<<20;
+	case AMRS:	return SYSOP(1,2,0,0,0,0,0);
+	case AMSR:	return SYSOP(0,2,0,0,0,0,0);
 
 	case ANEG:	return S64 | 1<<30 | 0<<29 | 0xB<<24 | 0<<21;
 	case ANEGW:	return S32 | 1<<30 | 0<<29 | 0xB<<24 | 0<<21;
@@ -964,10 +983,17 @@ opirr(int a)
 	case AMOVZ:	return S64 | 2<<29 | 0x25<<23;
 	case AMOVZW:	return S32 | 2<<29 | 0x25<<23;
 
-	case AMSR:	return 0x354 | 0<<21 | 0<<19 | 4<<12 | 0x1F;
+	case AMSR:	return SYSOP(0,0,0,4,0,0,0x1F);	/* MSR (immediate) */
+
+	case ASYS:	return SYSOP(0,1,0,0,0,0,0);
+	case ASYSL:	return SYSOP(1,1,0,0,0,0,0);
 
 	case ATBZ:	return 0x36<<24;
 	case ATBNZ:	return 0x37<<24;
+
+	case ADSB:	return SYSOP(0,0,3,3,0,4,0x1F);
+	case ADMB:	return SYSOP(0,0,3,3,0,5,0x1F);
+	case AISB:		return SYSOP(0,0,3,3,0,6,0x1F);
 
 	}
 	diag("bad irr %A", a);
@@ -1023,6 +1049,7 @@ opxrrr(int a)
 	return 0;
 }
 
+
 static long
 opimm(int a)
 {
@@ -1035,8 +1062,8 @@ opimm(int a)
 	case ADCPS1:	return 0xD4<<24 | 5<<21 | 1;
 	case ADCPS2:	return 0xD4<<24 | 5<<21 | 2;
 	case ADCPS3:	return 0xD4<<24 | 5<<21 | 3;
-	case ADRPS:	return 0xD6<<24 | 5<<21 | 0x1F<<16 | 0x1F<<5;
-	case ACLREX:	return 0x354<<22 | 0<<21 | 0<<19 | 3<<16 | 3<<12 | 2<<5 | 0x1F;
+
+	case ACLREX:	return SYSOP(0,0,3,3,0,2,0x1F);
 	}
 	diag("bad imm %A", a);
 	prasm(curp);
@@ -1116,6 +1143,7 @@ static long
 op0(int a)
 {
 	switch(a){
+	case ADRPS:	return 0x6B<<25 | 5<<21 | 0x1F<<16 | 0x1F<<5;
 	case AERET:	return 0x6B<<25 | 4<<21 | 0x1F<<16 | 0<<10 | 0x1F<<5;
 	case ANOP:	return SYSHINT(0);
 	case AYIELD:	return SYSHINT(1);
