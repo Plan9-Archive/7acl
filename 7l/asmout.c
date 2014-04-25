@@ -299,17 +299,6 @@ asmout(Prog *p, Optab *o)
 		o1 |= (rf<<16) | (r<<5) | rt;
 		break;
 
-#ifdef YYY
-	case -1:	/* old mull with REGREG (unused) */
-		o1 = oprrr(p->as);
-		rf = p->from.reg;
-		rt = p->to.reg;
-		rt2 = p->to.offset;
-		r = p->reg;
-		o1 |= (rf<<8) | r | (rt<<16) | (rt2<<12);
-		break;
-#endif
-
 	case 18:	/* csel cond,Rn,Rm,Rd; cinc/cinv/cneg cond,Rn,Rd; cset cond,Rd */
 		o1 = oprrr(p->as);
 		cond = p->from.reg;
