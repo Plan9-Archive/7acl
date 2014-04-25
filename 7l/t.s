@@ -80,11 +80,39 @@ TEXT	_excdeb(SB), $-4
 	ISB	$9
 	RETURN
 
-TEXT	_sysmsr(SB), $-4
+TEXT	_sys(SB), $-4
 	SYS	R5, 1, 2, 3, 4
+	SYS	R5, $(1<<16 | 2<<12 | 3<<8 | 4<<5)	/* op1, Cn, Cm, op2 */
 	SYS	1, 2, 3, 4
+	SYS	$(1<<16 | 2<<12 | 3<<8 | 4<<5)
 	SYSL	1, 2, 3, 4, R5
+	SYSL	$(1<<16 | 2<<12 | 3<<8 | 4<<5), R5
 	RETURN
+
+TEXT	_msr(SB), $-4
+	MRS	DAIF, R5
+	MSR	R5, DAIF
+	MRS	NZCV, R5
+	MSR	R5, NZCV
+	MRS	FPSR, R6
+	MSR	R6, FPSR
+	MRS	FPSR, R7
+	MSR	R7, FPSR
+	MRS	SPSR_EL2, R8
+	MRS	CurrentEL, R9
+	MRS	SP_EL0, R9
+//	MRS	SP_EL1, R9
+	MRS	SPSel, R9
+
+	MOV	DAIF, R5
+	MOV	R5, DAIF
+
+	MOV	$3, DAIFSet
+	MOV	$2, DAIFClr
+	MOV	$1, SPSel
+
+	RETURN
+
 
 TEXT _movwide(SB), $-4
 	// bit of a waste, because MOVZ/MOVN disassemble as MOV */
@@ -300,6 +328,9 @@ TEXT	_nops(SB), $-4
 	WFI
 	SEV
 	SEVL
+	HINT	$0	// syn for NOP
+	HINT	$6
+	HINT	$0x7F
 	RETURN
 
 TEXT	_movext(SB), $-4

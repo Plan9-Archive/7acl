@@ -13,7 +13,6 @@
 #define	OPBLR(x)		(0x6B<<25 | 0<<23 | (x)<<21 | 0x1F<<16 | 0<<10)	/* x=0, JMP; 1, CALL; 2, RET */
 #define	SYSOP(l,op0,op1,crn,crm,op2,rt)	(0x354<<22 | (l)<<21 | (op0)<<19 | (op1)<<16 | (crn)<<12 | (crm)<<8 | (op2)<<5 | (rt))
 #define	SYSHINT(x)	SYSOP(0,0,3,2,0,(x),0x1F)
-#define	EXTR(v,offset,mask)	(((v)>>(offset))&(mask))
 
 #define	LDSTR12U(sz,v,opc)	((sz)<<30 | 7<<27 | (v)<<26 | 1<<24 | (opc)<<22)
 #define	LDSTR9S(sz,v,opc)	((sz)<<30 | 7<<27 | (v)<<26 | 0<<24 | (opc)<<22)
@@ -56,15 +55,16 @@ static long	opldrpp(int);
 static long	opload(int);
 static long	omovlit(int, Prog*, Adr*, int);
 
-/* TO DO: impossibly many registers, back away */
-static ulong systemreg[] = {
-[D_DAIF]	0,
-};
-
-static ulong pstatefield[] = {
-[D_SPSel] =	(0<<16) | (5<<5),
-[D_DAIFSet] =	(3<<16) | (3<<5),
-[D_DAIFClr] =	(3<<16) | (7<<5),
+/*
+ * valid pstate field values, and value to use in instruction
+ */
+static struct{
+	ulong	a;
+	ulong	b;
+} pstatefield[] = {
+D_SPSel,		(0<<16) | (4<<12) | (5<<5),
+D_DAIFSet,	(3<<16) | (4<<12) | (6<<5),
+D_DAIFClr,	(3<<16) | (4<<12) | (7<<5),
 };
 
 void
@@ -72,7 +72,7 @@ asmout(Prog *p, Optab *o)
 {
 	long o1, o2, o3, o4, o5, v;
 	vlong d;
-	int r, s, rf, rt, ra, nzcv, cond;
+	int r, s, rf, rt, ra, nzcv, cond, i;
 	static Prog *lastcase;
 
 	o1 = 0;
@@ -474,17 +474,20 @@ asmout(Prog *p, Optab *o)
 
 	case 35:	/* mov PSR,R -> mrs */
 		o1 = oprrr(AMRS);
-		v = 0;
-		if(p->from.reg >= nelem(systemreg) || (v = systemreg[p->from.reg]) == 0)
-			diag("illegal system register\n%P", p);
+		v = p->from.offset;
+		if((o1 & (v & ~(3<<19))) != 0)
+			diag("MRS register value overlap\n%P", p);
 		o1 |= v;
 		o1 |= p->to.reg;
 		break;
 
 	case 36:	/* mov R,PSR */
 		o1 = oprrr(AMSR);
-		o1 |= (p->to.reg & 1) << 19;
-		o1 |= p->from.reg << 0;
+		v = p->to.offset;
+		if((o1 & (v & ~(3<<19))) != 0)
+			diag("MSR register value overlap\n%P", p);
+		o1 |= v;
+		o1 |= p->from.reg;
 		break;
 
 	case 37:	/* mov $con,PSTATEfield -> MSR [immediate] */
@@ -493,7 +496,12 @@ asmout(Prog *p, Optab *o)
 		o1 = opirr(AMSR);
 		o1 |= (p->from.offset&0xF) << 8;	/* Crm */
 		v = 0;
-		if(p->to.reg >= nelem(pstatefield) || (v = pstatefield[p->to.reg]) == 0)
+		for(i = 0; i < nelem(pstatefield); i++)
+			if(pstatefield[i].a == p->to.offset){
+				v = pstatefield[i].b;
+				break;
+			}
+		if(v == 0)
 			diag("illegal PSTATE field for immediate move\n%P", p);
 		o1 |= v;
 		break;
@@ -586,11 +594,9 @@ asmout(Prog *p, Optab *o)
 
 	case 50:	/* sys/sysl */
 		o1 = opirr(p->as);
-		v = p->from.offset;
-		o1 |= EXTR(v, 24, 0x7)<<16;	/* op1 */
-		o1 |= EXTR(v, 16, 0xF)<<12;	/* CRn */
-		o1 |= EXTR(v, 8, 0xF)<<8;		/* CRm */
-		o1 |= EXTR(v, 0, 0x7)<<5;		/* op2 */
+		if((p->from.offset & ~SYSARG4(0x7, 0xF, 0xF, 0x7)) != 0)
+			diag("illegal SYS argument\n%P", p);
+		o1 |= p->from.offset;
 		if(p->to.type == D_REG)
 			o1 |= p->to.reg;
 		else if(p->reg != NREG)
@@ -605,7 +611,11 @@ asmout(Prog *p, Optab *o)
 			o1 |= (p->from.offset&0xF)<<8;
 		break;
 
-	case 52:	/* unused */
+	case 52:	/* hint */
+		o1 = opirr(p->as);
+		o1 |= (p->from.offset&0x7F)<<5;
+		break;
+
 	case 53:	/* unused */
 		break;
 
@@ -985,6 +995,10 @@ opirr(int a)
 
 	case AMSR:	return SYSOP(0,0,0,4,0,0,0x1F);	/* MSR (immediate) */
 
+	case AAT:
+	case ADC:
+	case AIC:
+	case ATLBI:
 	case ASYS:	return SYSOP(0,1,0,0,0,0,0);
 	case ASYSL:	return SYSOP(1,1,0,0,0,0,0);
 
@@ -994,6 +1008,7 @@ opirr(int a)
 	case ADSB:	return SYSOP(0,0,3,3,0,4,0x1F);
 	case ADMB:	return SYSOP(0,0,3,3,0,5,0x1F);
 	case AISB:		return SYSOP(0,0,3,3,0,6,0x1F);
+	case AHINT:	return SYSOP(0,0,3,2,0,0,0x1F);
 
 	}
 	diag("bad irr %A", a);

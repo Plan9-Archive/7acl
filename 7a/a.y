@@ -31,7 +31,7 @@
 %type	<lval>	con expr pointer offset sreg spreg
 %type	<lval>	scon indexreg vset vreglist
 %type	<gen>	gen rel reg freg vreg shift fcon frcon extreg vlane vgen
-%type	<gen>	imm ximm name oreg nireg ioreg imsr spr cond
+%type	<gen>	imm ximm name oreg nireg ioreg imsr spr cond sysarg
 %%
 prog:
 |	prog line
@@ -350,32 +350,20 @@ inst:
 /*
  * SYS/SYSL
  */
-|	LTYPEN con ',' con ',' con ',' con
+|	LTYPEN sysarg
 	{
-		Gen g;
-		g = nullgen;
-		g.type = D_CONST;
-		g.offset = ($2<<24)|($4<<16)|($6<<8)|$8;	/* op1, CRn, CRm, op2 */
-		outcode($1, &g, NREG, &nullgen);
+		outcode($1, &$2, NREG, &nullgen);
 	}
-|	LTYPEN reg ',' con ',' con ',' con ',' con
+|	LTYPEN reg ',' sysarg
 	{
-		Gen g;
-		g = nullgen;
-		g.type = D_CONST;
-		g.offset = ($4<<24)|($6<<16)|($8<<8)|$10;
-		outcode($1, &g, $2.reg, &nullgen);
+		outcode($1, &$4, $2.reg, &nullgen);
 	}
-|	LTYPEO con ',' con ',' con ',' con ',' reg
+|	LTYPEO sysarg ',' reg
 	{
-		Gen g;
-		g = nullgen;
-		g.type = D_CONST;
-		g.offset = ($2<<24)|($4<<16)|($6<<8)|$8;
-		outcode($1, &g, NREG, &$10);
+		outcode($1, &$2, NREG, &$4);
 	}
 /*
- * DMB
+ * DMB, HINT
  */
 |	LDMB imm
 	{
@@ -399,6 +387,15 @@ cond:
 
 comma:
 |	',' comma
+
+sysarg:
+	con ',' con ',' con ',' con
+	{
+		$$ = nullgen;
+		$$.type = D_CONST;
+		$$.offset = SYSARG4($1, $3, $5, $7);
+	}
+|	imm
 
 rel:
 	con '(' LPC ')'
@@ -469,7 +466,7 @@ gen:
 	{
 		$$ = nullgen;
 		$$.type = D_SPR;
-		$$.reg = $1;
+		$$.offset = $1;
 	}
 |	con
 	{
@@ -660,13 +657,13 @@ spr:
 	{
 		$$ = nullgen;
 		$$.type = D_SPR;
-		$$.reg = $1;
+		$$.offset = $1;
 	}
 |	LSPR '(' con ')'
 	{
 		$$ = nullgen;
 		$$.type = $1;
-		$$.reg = $3;
+		$$.offset = $3;
 	}
 
 frcon:

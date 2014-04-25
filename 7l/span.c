@@ -472,8 +472,8 @@ aclass(Adr *a)
 		return C_GOK;
 
 	case D_SPR:
-		if(a->reg == D_FPCR)
-			return C_FCR;
+//		if(a->offset == D_FPCR)
+//			return C_FCR;
 		return C_SPR;
 
 	case D_OCONST:
@@ -1071,7 +1071,14 @@ buildop(void)
 			break;
 
 		case ASYS:
+			oprange[AAT] = t;
+			oprange[ADC] = t;
+			oprange[AIC] = t;
+			oprange[ATLBI] = t;
+			break;
+
 		case ASYSL:
+		case AHINT:
 			break;
 
 		case ADMB:
@@ -1081,7 +1088,6 @@ buildop(void)
 
 		case AMRS:
 		case AMSR:
-			/* TO DO */
 			break;
 		}
 	}

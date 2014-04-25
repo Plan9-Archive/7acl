@@ -493,7 +493,6 @@ zaddr(uchar *p, Adr *a, Sym *h[])
 	case D_REG:
 	case D_FREG:
 	case D_VREG:
-	case D_SPR:
 	case D_COND:
 		break;
 
@@ -505,6 +504,7 @@ zaddr(uchar *p, Adr *a, Sym *h[])
 	case D_SHIFT:
 	case D_EXTREG:
 	case D_ROFF:
+	case D_SPR:
 		l = p[4] | (p[5]<<8) | (p[6]<<16) | (p[7]<<24);
 		a->offset = l;
 		c += 4;
