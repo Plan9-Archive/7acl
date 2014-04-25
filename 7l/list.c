@@ -189,7 +189,7 @@ Dconv(Fmt *fp)
 		break;
 
 	case D_SPR:
-		switch(a->reg){
+		switch(a->offset){
 		case D_FPSR:
 			sprint(str, "FPSR");
 			break;
@@ -200,11 +200,11 @@ Dconv(Fmt *fp)
 			sprint(str, "NZCV");
 			break;
 		default:
-			sprint(str, "SPR%d", a->reg);
+			sprint(str, "SPR(%#llux)", a->offset);
 			break;
 		}
 		if(a->name != D_NONE || a->sym != S)
-			sprint(str, "%N(SPR%d)(REG)", a, a->reg);
+			sprint(str, "%N(SPR%lld)(REG)", a, a->offset);
 		break;
 
 	case D_BRANCH:	/* botch */

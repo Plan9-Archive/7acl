@@ -342,6 +342,7 @@ Optab	optab[] =
 	{ ASYSL,		C_LCON,	C_NONE,	C_REG,		50, 4, 0 },
 
 	{ ADMB,		C_LCON,	C_NONE, 	C_NONE,		51, 4, 0 },
+	{ AHINT,		C_LCON,	C_NONE,	C_NONE,		52, 4, 0 },
 
 	{ AXXX,		C_NONE,	C_NONE,	C_NONE,		 0, 4, 0 },
 };

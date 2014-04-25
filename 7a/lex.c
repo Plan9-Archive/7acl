@@ -157,7 +157,7 @@ struct
 {
 	char	*name;
 	ushort	type;
-	ushort	value;
+	ulong	value;
 } itab[] =
 {
 	"SP",		LSP,	D_AUTO,
@@ -281,21 +281,21 @@ struct
 	"NZCV",		LSPREG,	D_NZCV,
 	"ELR_EL1",	LSPREG,	D_ELR_EL1,
 	"ELR_EL2",	LSPREG,	D_ELR_EL2,
-	"ELR_EL3",	LSPREG,	D_ELR_EL3,
-	"LR_EL0",	LSPREG,	D_LR_EL0,
+//	"ELR_EL3",	LSPREG,	D_ELR_EL3,
+//	"LR_EL0",	LSPREG,	D_LR_EL0,
 	"DAIF",	LSPREG,	D_DAIF,
 	"CurrentEL",	LSPREG,	D_CurrentEL,
 	"SP_EL0",	LSPREG,	D_SP_EL0,
-	"SP_EL1",	LSPREG,	D_SP_EL1,
-	"SP_EL2",	LSPREG,	D_SP_EL2,
+//	"SP_EL1",	LSPREG,	D_SP_EL1,
+//	"SP_EL2",	LSPREG,	D_SP_EL2,
 	"SPSel",	LSPREG,	D_SPSel,
-	"SPSR_abt",	LSPREG,	D_SPSR_abt,	
+//	"SPSR_abt",	LSPREG,	D_SPSR_abt,	
 	"SPSR_EL1",	LSPREG,	D_SPSR_EL1,
 	"SPSR_EL2",	LSPREG,	D_SPSR_EL2,
-	"SPSR_EL3",	LSPREG,	D_SPSR_EL3,
-	"SPSR_fiq",	LSPREG,	D_SPSR_fiq,
-	"SPSR_ieq",	LSPREG,	D_SPSR_ieq,
-	"SPSR_und",	LSPREG,	D_SPSR_und,
+//	"SPSR_EL3",	LSPREG,	D_SPSR_EL3,
+//	"SPSR_fiq",	LSPREG,	D_SPSR_fiq,
+//	"SPSR_ieq",	LSPREG,	D_SPSR_ieq,
+//	"SPSR_und",	LSPREG,	D_SPSR_und,
 	"DAIFSet",	LSPREG,	D_DAIFSet,
 	"DAIFClr",	LSPREG,	D_DAIFClr,
 
@@ -353,7 +353,7 @@ struct
 	"ANDW",	LTYPE1,	AANDW,
 	"ASR",	LTYPE1,	AASR,
 	"ASRW",	LTYPE1,	AASRW,
-	"AT",	LTYPE1,	AAT,
+	"AT",	LTYPEN,	AAT,
 	"BFI",	LTYPEY,	ABFI,
 	"BFIW",	LTYPEY,	ABFIW,
 	"BFM",	LTYPEY,	ABFM,
@@ -408,7 +408,7 @@ struct
 	"CSINVW",	LTYPES,	ACSINVW,
 	"CSNEG",	LTYPES,	ACSNEG,
 	"CSNEGW",	LTYPES,	ACSNEGW,
-	"DC",	LTYPE1,	ADC,
+	"DC",	LTYPEN,	ADC,
 	"DCPS1",	LTYPE6,	ADCPS1,
 	"DCPS2",	LTYPE6,	ADCPS2,
 	"DCPS3",	LTYPE6,	ADCPS3,
@@ -422,10 +422,10 @@ struct
 	"ERET",	LTYPE0,	AERET,
 	"EXTR",	LTYPEP,	AEXTR,
 	"EXTRW",	LTYPEP,	AEXTRW,
-	"HINT",	LTYPE3,	AHINT,
+	"HINT",	LDMB,	AHINT,
 	"HLT",	LTYPE6,	AHLT,
 	"HVC",	LTYPE6,	AHVC,
-	"IC",	LTYPE1,	AIC,
+	"IC",	LTYPEN,	AIC,
 	"ISB",	LDMB,	AISB,
 	"LSL",	LTYPE1,	ALSL,
 	"LSLW",	LTYPE1,	ALSLW,
@@ -515,7 +515,7 @@ struct
 	"SYSL",	LTYPEO,	ASYSL,
 	"TBNZ",	LTYPET,	ATBNZ,
 	"TBZ",	LTYPET,	ATBZ,
-	"TLBI",	LTYPE1,	ATLBI,
+	"TLBI",	LTYPEN,	ATLBI,
 	"TST",	LTYPE1,	ATST,
 	"TSTW",	LTYPE1,	ATSTW,
 	"UBFIZ",	LTYPEY,	AUBFIZ,
@@ -761,7 +761,6 @@ zaddr(Gen *a, int s)
 	case D_REG:
 	case D_FREG:
 	case D_VREG:
-	case D_SPR:
 	case D_COND:
 		break;
 
@@ -786,6 +785,7 @@ zaddr(Gen *a, int s)
 	case D_SHIFT:
 	case D_EXTREG:
 	case D_ROFF:
+	case D_SPR:
 		l = a->offset;
 		Bputc(&obuf, l);
 		Bputc(&obuf, l>>8);
