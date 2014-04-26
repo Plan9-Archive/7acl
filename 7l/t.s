@@ -150,6 +150,9 @@ TEXT	_addcon(SB), $-4
 	ADD	$0x100, SP
 	SUB	$0x100, SP
 	CMP	$0x100, SP
+	CMN	$0x100, SP
+	CMP	$0x123000,SP
+	CMN	$0x123000,SP
 	RETURN
 
 TEXT	_muls(SB), $-4
@@ -200,8 +203,61 @@ TEXT	_movcon(SB), $-4
 	MOVW	$-1, R4
 //	MVN	$0x123, R4
 //	MOV	$0x123(SP), R4
+	RETURN
+
+TEXT	_arithshifted(SB), $-4
+	ADD	R1<<32, R2, R3
+	ADD	R1, R2, R3
+	ADDW	R1<<16, R2, R3
+	ADDW	R1, R2, R3
+	ADDS	R1<<32, R2, R3
+	ADDSW	R1<<16, R2, R3
+	ADD		R1<<24,R3,R4	/* logical left */
+	ADD		R1>>24,R3,R4	/* logical right */
+	ADD		R1->24,R3,R4	/* arithmetic right */
+	/* (no rotate for arithmetic ops) */
+	SUB	R1<<32, R2, R3
+	SUB	R1, R2, R3
+	SUBW	R1<<16, R2, R3
+	SUBS	R1<<32, R2, R3
+	SUBS	R1, R2, R3
+	SUBSW	R1<<16, R2, R3
+	CMN	R1<<16, R2
+	CMNW	R1<<16, R2
+	CMP	R1<<16, R2
+	CMP	R1, R2
+	NEG	R1, R2
+	NEG	R1<<16, R2
+	NEGW	R1<<16, R2
+	NEGS	R1<<16, R2
+	NEGSW	R1<<16, R2
+	RETURN
+
+TEXT	_arithextended(SB), $-4
+	ADD		R3.UXTB << 2,R3,R4	/* extended register */
+	ADD		R3.SXTX << 2, R3, R4
+	ADDW	R3.UXTW << 2, R3, R4
+	ADDW	R3.UXTW, R3, R4
+	ADD	R3, SP
+	SUB	R1, SP
+	ADDS	R3, SP, R4
+	ADDSW	R1.UXTX << 2, R3, R4
+	ADD	R3.UXTX<<2, R2, R1
+	SUB	R3.UXTB<<2, R2, R1
+	SUBS	R3.UXTX<<4, SP, R1
+	CMN	R3.UXTX<<2, SP
+	CMP	R3.UXTX<<2, SP
+	CMPW	R3.UXTW, R4
+//	CMP	R5.SXTW, R4
+	RETURN
+
+TEXT _movreg(SB), $-4
 	MOV	R3, SP
 	MOV	SP, R3
+	MOV	R1, R2
+	MOVW	R1, R2
+	MVN	R1, R2
+	MVNW	R1, R2
 	RETURN
 
 TEXT	_shrrr(SB), $-4
@@ -378,6 +434,22 @@ TEXT	_lstr12u(SB), $-1
 	MOVB	R1, 4095(R5)
 	RETURN
 
+#ifdef YYY
+TEXT	_amodes(SB), $-4
+	MOVW		R3, (R2)
+	MOVW		R3, 10(R2)
+	MOVW		R3, name(SB)
+	MOVW		R3, name(SB)(R2)
+	MOVW		R3, name(SB)[R2]
+	MOVW		R3, (R2)
+	MOVW		R3, (R2)[R1]
+	MOV			R3, (R2)[R1]
+	MOV			R3, (R2)(R1)
+	MOVW		R3, (R2)(R1)
+	MOVW		R3, (R2)[R1.SXTX]
+	RETURN
+#endif
+
 TEXT	_adc(SB), $-4
 	ADC	R1, R2, R3
 	ADCW	R1, R2, R3
@@ -513,4 +585,5 @@ GLOBL	ext3+0(SB), $4
 GLOBL	ext4+0(SB), $4
 GLOBL	ext5+0(SB), $4
 GLOBL	ext6+0(SB), $16
+GLOBL	name+0(SB), $8
 	END
