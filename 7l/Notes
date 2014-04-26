@@ -95,3 +95,5 @@ programmer-friendly assembler may transform it into some other instruction which
 Need 32-bit versions of load signed byte/halfword instructions?
 
 FCMPE
+
+MOVI	#bimm, Rn	 -> MOV
