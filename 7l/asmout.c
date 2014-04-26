@@ -89,16 +89,14 @@ asmout(Prog *p, Optab *o)
 	case 0:		/* pseudo ops */
 		break;
 
-	case 1:		/* op Rm,[Rn],Rd; default Rn=Rd */
+	case 1:		/* op Rm,[Rn],Rd; default Rn=Rd -> op Rm<<0,[Rn,]Rd (shifted register) */
 		o1 = oprrr(p->as);
 		rf = p->from.reg;
 		rt = p->to.reg;
 		r = p->reg;
 		if(p->to.type == D_NONE)
 			rt = REGZERO;
-		if(p->as == AMVN)
-			r = REGZERO;
-		else if(r == NREG)
+		if(r == NREG)
 			r = rt;
 		o1 |= (rf<<16) | (r<<5) | rt;
 		break;
@@ -122,7 +120,7 @@ asmout(Prog *p, Optab *o)
 		o1 |= ((v& 0xFFF) << 10) | (r<<5) | rt;
 		break;
 
-	case 3:		/* op R<<n[,R],R */
+	case 3:		/* op R<<n[,R],R (shifted register) */
 		o1 = oprrr(p->as);
 		o1 |= p->from.offset;	/* includes reg, op, etc */
 		rt = p->to.reg;
@@ -137,25 +135,15 @@ asmout(Prog *p, Optab *o)
 		break;
 
 	case 4:		/* mov $addcon, R; mov $recon, R; mov $racon, R */
-		if(p->as == AMOV)
-			o1 = opirr(AADD);
-		else if(p->as == AMVN || p->as == AMVNW)
-			o1 = opirr(ASUB);
-		else
-			o1 = opirr(AADDW);
+		o1 = opirr(p->as);
 		rt = p->to.reg;
-		if(p->from.type == D_CONST){
-			r = o->param;
-			if(r == 0)
-				r = REGZERO;
-			v = p->from.offset;
-			if((v & 0xFFF000) != 0){
-				v >>= 12;
-				o1 |= 1<<22;
-			}
-		}else{
-			r = p->from.reg;
-			v = 0;
+		r = o->param;
+		if(r == 0)
+			r = REGZERO;
+		v = p->from.offset;
+		if((v & 0xFFF000) != 0){
+			v >>= 12;
+			o1 |= 1<<22;	/* shift, by 12 */
 		}
 		o1 |= ((v& 0xFFF) << 10) | (r<<5) | rt;
 		break;
@@ -384,6 +372,53 @@ asmout(Prog *p, Optab *o)
 		o1 |= ((v&0x1FF)<<12) | (p->to.reg<<5) | p->from.reg;
 		break;
 
+	case 24:		/* mov/mvn Rs,Rd -> add $0,Rs,Rd or orr Rs,ZR,Rd */
+		rf = p->from.reg;
+		rt = p->to.reg;
+		s = rf == REGSP || rt == REGSP;
+		if(p->as == AMVN || p->as == AMVNW){
+			if(s)
+				diag("illegal SP reference\n%P", p);
+			o1 = oprrr(p->as);
+			o1 |= (rf<<16) | (REGZERO<<5) | rt;
+		}else if(s){
+			o1 = opirr(p->as);
+			o1 |= (rf<<5) | rt;
+		}else{
+			o1 = oprrr(p->as);
+			o1 |= (rf<<16) | (REGZERO<<5) | rt;
+		}
+		break;
+
+	case 25: /* negX Rs, Rd -> subX Rs<<0, ZR, Rd */
+		o1 = oprrr(p->as);
+		rf = p->from.reg;
+		rt = p->to.reg;
+		o1 |= (rf<<16) | (REGZERO<<5) | rt;
+		break;
+
+	case 26: /* negX Rm<<s, Rd -> subX Rm<<s, ZR, Rd */
+		o1 = oprrr(p->as);
+		o1 |= p->from.offset;	/* includes reg, op, etc */
+		rt = p->to.reg;
+		o1 |= (REGZERO<<5) | rt;
+		break;
+
+	case 27:		/* op Rm<<n[,Rn],Rd (extended register) */
+		o1 = opxrrr(p->as);
+		if(p->from.type == D_EXTREG)
+			o1 |= p->from.offset;	/* includes reg, op, etc */
+		else
+			o1 |= p->from.reg << 16;
+		rt = p->to.reg;
+		if(p->to.type == D_NONE)
+			rt = REGZERO;
+		r = p->reg;
+		if(r == NREG)
+			r = rt;
+		o1 |= (r<<5) | rt;
+		break;
+
 	case 30:	/* movT R,L(R) -> strT */
 		o1 = omovlit(AMOVW, p, &p->to, REGTMP);
 		if(!o1)
@@ -461,7 +496,7 @@ asmout(Prog *p, Optab *o)
 		o2 |= p->to.reg;
 		break;
 
-	case 35:	/* mov PSR,R -> mrs */
+	case 35:	/* mov SPR,R -> mrs */
 		o1 = oprrr(AMRS);
 		v = p->from.offset;
 		if((o1 & (v & ~(3<<19))) != 0)
@@ -470,7 +505,7 @@ asmout(Prog *p, Optab *o)
 		o1 |= p->to.reg;
 		break;
 
-	case 36:	/* mov R,PSR */
+	case 36:	/* mov R,SPR */
 		o1 = oprrr(AMSR);
 		v = p->to.offset;
 		if((o1 & (v & ~(3<<19))) != 0)
@@ -662,10 +697,6 @@ asmout(Prog *p, Optab *o)
 		o1 |= rf<<16 | cond<<12  | rt<<5 | nzcv;
 		break;
 
-	case 58:	/* FREE */
-	case 59:	/* FREE */
-		break;
-
 	case 60:	/* adrp label,r */
 		d = brdist(p, 12, 21, 0);
 		o1 = ADR(1, d, p->to.reg);
@@ -786,17 +817,23 @@ oprrr(int a)
 
 	case AADD:	return S64 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
 	case AADDW:	return S32 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
+	case ACMN:
 	case AADDS:	return S64 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
+	case ACMNW:
 	case AADDSW:	return S32 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
 
-	case ASUB:	return S64 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
-	case ASUBW:	return S32 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
-	case ASUBS:	return S64 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
-	case ASUBSW:	return S32 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
+	case ASUB:	return S64 | 1<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
+	case ASUBW:	return S32 | 1<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
+	case ACMP:
+	case ASUBS:	return S64 | 1<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
+	case ACMPW:
+	case ASUBSW:	return S32 | 1<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 0<<21 | 0<<10;
 
 	case AAND:	return S64 | 0<<29 | 0xA<<24;
 	case AANDW:	return S32 | 0<<29 | 0xA<<24;
+	case AMOV:
 	case AORR:	return S64 | 1<<29 | 0xA<<24;
+	case AMOVW:
 	case AORRW:	return S32 | 1<<29 | 0xA<<24;
 	case AEOR:	return S64 | 2<<29 | 0xA<<24;
 	case AEORW:	return S32 | 2<<29 | 0xA<<24;
@@ -821,11 +858,6 @@ oprrr(int a)
 	case ACCMNW:	return S32 | 0<<30 | 1<<29 | 0xD2<<21 | 0<<11 | 0<<10 | 0<<4;
 	case ACCMP:	return S64 | 1<<30 | 1<<29 | 0xD2<<21 | 0<<11 | 0<<10 | 0<<4;	/* imm5<<16 | cond<<12 | nzcv<<0 */
 	case ACCMPW:	return S32 | 1<<30 | 1<<29 | 0xD2<<21 | 0<<11 | 0<<10 | 0<<4;
-
-	case ACMN:	return S64 | 0<<30 | 1<<29 | 0xB<<24 | 0<<22 | 1<<21;
-	case ACMNW:	return S32 | 0<<30 | 1<<29 | 0xB<<24 | 0<<22 | 1<<21;
-	case ACMP:	return S64 | 1<<30 | 1<<29 | 0xB<<24 | 0<<22 | 1<<21;
-	case ACMPW:	return S32 | 1<<30 | 1<<29 | 0xB<<24 | 0<<22 | 1<<21;
 
 	case ACRC32B:		return S32 | OPDP2(16);
 	case ACRC32H:		return S32 | OPDP2(17);
@@ -874,9 +906,9 @@ oprrr(int a)
 	case ANEGSW:	return S32 | 1<<30 | 1<<29 | 0xB<<24 | 0<<21;
 
 	case AMVN:
-	case AORN:	return S64 | 2<<29 | 0xA<<24 | 1<<21;
+	case AORN:	return S64 | 1<<29 | 0xA<<24 | 1<<21;
 	case AMVNW:
-	case AORNW:	return S32 | 2<<29 | 0xA<<24 | 1<<21;
+	case AORNW:	return S32 | 1<<29 | 0xA<<24 | 1<<21;
 
 	case AREM:
 	case ASDIV:	return S64 | OPDP2(3);
@@ -914,13 +946,19 @@ opirr(int a)
 {
 	switch(a){
 
+	case AMOV:
 	case AADD:	return S64 | 0<<30 | 0<<29 | 0x11<<24;
+	case ACMN:
 	case AADDS:	return S64 | 0<<30 | 1<<29 | 0x11<<24;
+	case AMOVW:
 	case AADDW:	return S32 | 0<<30 | 0<<29 | 0x11<<24;
+	case ACMNW:
 	case AADDSW:	return S32 | 0<<30 | 1<<29 | 0x11<<24;
 	case ASUB:	return S64 | 1<<30 | 0<<29 | 0x11<<24;
+	case ACMP:
 	case ASUBS:	return S64 | 1<<30 | 1<<29 | 0x11<<24;
 	case ASUBW:	return S32 | 1<<30 | 0<<29 | 0x11<<24;
+	case ACMPW:
 	case ASUBSW:	return S32 | 1<<30 | 1<<29 | 0x11<<24;
 
 	/* op $imm(SB), Rd; op label, Rd */
@@ -967,12 +1005,6 @@ opirr(int a)
 	case ACCMNW:	return S32 | 0<<30 | 1<<29 | 0xD2<<21 | 1<<11 | 0<<10 | 0<<4;
 	case ACCMP:	return S64 | 1<<30 | 1<<29 | 0xD2<<21 | 1<<11 | 0<<10 | 0<<4;	/* imm5<<16 | cond<<12 | nzcv<<0 */
 	case ACCMPW:	return S32 | 1<<30 | 1<<29 | 0xD2<<21 | 1<<11 | 0<<10 | 0<<4;
-
-	case ACMN:	return S64 | 0<<30 | 1<<29 | 0x11<<24;
-	case ACMNW:	return S32 | 0<<30 | 1<<29 | 0x11<<24;
-
-	case ACMP:	return S64 | 1<<30 | 1<<29 | 0x11<<24;
-	case ACMPW:	return S32 | 1<<30 | 1<<29 | 0x11<<24;
 
 	case AMOVK:	return S64 | 3<<29 | 0x25<<23;
 	case AMOVKW:	return S32 | 3<<29 | 0x25<<23;
@@ -1040,13 +1072,17 @@ opxrrr(int a)
 	switch(a) {
 	case AADD:	return S64 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_64;
 	case AADDW:	return S32 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_32;
+	case ACMN:
 	case AADDS:	return S64 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_64;
+	case ACMNW:
 	case AADDSW:	return S32 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_32;
 
-	case ASUB:	return S64 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_64;
-	case ASUBW:	return S32 | 0<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_32;
-	case ASUBS:	return S64 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_64;
-	case ASUBSW:	return S32 | 0<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_32;
+	case ASUB:	return S64 | 1<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_64;
+	case ASUBW:	return S32 | 1<<30 | 0<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_32;
+	case ACMP:
+	case ASUBS:	return S64 | 1<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_64;
+	case ACMPW:
+	case ASUBSW:	return S32 | 1<<30 | 1<<29 | 0x0b<<24 | 0<<22 | 1<<21 | LSL0_32;
 
 	}
 	diag("bad opxrrr %A\n%P", a, curp);
@@ -1302,14 +1338,14 @@ omovlit(int as, Prog *p, Adr *a, int dr)
 
 	if(p->cond == nil){	/* not in literal pool */
 		aclass(a);
-		v = immrot(~instoffset);
-		if(v == 0) {
-			diag("missing literal\n%P", p);
-			return 0;
+		/* TO DO: could be clever, and use general constant builder */
+		o1 = oprrr(AADD);
+		v = instoffset;
+		if((v & 0xFFF000) != 0){
+			v >>= 12;
+			o1 |= 1<<22;	/* shift, by 12 */
 		}
-		o1 = oprrr(AMVN);
-		o1 |= v;
-		o1 |= dr << 12;
+		o1 |= ((v& 0xFFF) << 10) | (REGZERO<<5) | dr;
 	}else{
 		fp = 0;
 		w = 0;	/* default: 32 bit, unsigned */
@@ -1333,7 +1369,7 @@ omovlit(int as, Prog *p, Adr *a, int dr)
 		v = brdist(p, 0, 19, 2);
 		o1 = (w<<30)|(fp<<26)|(3<<27);
 		o1 |= (v&0x7FFFF)<<5;
-		o1 |= p->to.reg;
+		o1 |= dr;
 	}
 	return o1;
 }
