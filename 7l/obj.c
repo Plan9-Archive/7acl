@@ -491,6 +491,7 @@ zaddr(uchar *p, Adr *a, Sym *h[])
 
 	case D_NONE:
 	case D_REG:
+	case D_SP:
 	case D_FREG:
 	case D_VREG:
 	case D_COND:
