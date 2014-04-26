@@ -181,9 +181,9 @@ inst:
 /*
  * TBZ
  */
-|	LTYPET imm ',' spreg ',' rel
+|	LTYPET imm ',' reg ',' rel
 	{
-		outcode($1, &$2, $4, &$6);
+		outcode($1, &$2, $4.reg, &$6);
 	}
 /*
  * CCMN
@@ -561,11 +561,17 @@ imm:	'$' con
 	}
 
 reg:
-	spreg
+	sreg
 	{
 		$$ = nullgen;
 		$$.type = D_REG;
 		$$.reg = $1;
+	}
+|	LSP
+	{
+		$$ = nullgen;
+		$$.type = D_SP;
+		$$.reg = REGSP;
 	}
 
 shift:
@@ -633,7 +639,7 @@ scon:
 	{
 		if($$ < 0 || $$ >= 64)
 			yyerror("shift value out of range");
-		$$ = ($1&31) << 7;
+		$$ = $1&0x1F;
 	}
 
 sreg:

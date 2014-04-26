@@ -382,10 +382,10 @@ struct
 	"CLSW",	LTYPE2,	ACLSW,
 	"CLZ",	LTYPE2,	ACLZ,
 	"CLZW",	LTYPE2,	ACLZW,
-	"CMN",	LTYPE1,	ACMN,
-	"CMNW",	LTYPE1,	ACMNW,
-	"CMP",	LTYPE1,	ACMP,
-	"CMPW",	LTYPE1,	ACMPW,
+	"CMN",	LTYPE7,	ACMN,
+	"CMNW",	LTYPE7,	ACMNW,
+	"CMP",	LTYPE7,	ACMP,
+	"CMPW",	LTYPE7,	ACMPW,
 	"CNEG",	LTYPES,	ACNEG,
 	"CNEGW",	LTYPES,	ACNEGW,
 	"CRC32B",	LTYPE1,	ACRC32B,
@@ -516,8 +516,8 @@ struct
 	"TBNZ",	LTYPET,	ATBNZ,
 	"TBZ",	LTYPET,	ATBZ,
 	"TLBI",	LTYPEN,	ATLBI,
-	"TST",	LTYPE1,	ATST,
-	"TSTW",	LTYPE1,	ATSTW,
+	"TST",	LTYPE7,	ATST,
+	"TSTW",	LTYPE7,	ATSTW,
 	"UBFIZ",	LTYPEY,	AUBFIZ,
 	"UBFIZW",	LTYPEY,	AUBFIZW,
 	"UBFM",	LTYPEY,	AUBFM,
@@ -640,12 +640,6 @@ struct
 	"BLE",		LTYPE5,	ABLE,
 	"BCASE",	LTYPE5,	ABCASE,
 
-	"CMP",		LTYPE7,	ACMP,
-	"TST",		LTYPE7,	ATST,
-	"CMN",		LTYPE7,	ACMN,
-
-	"RET",		LTYPEA, ARET,
-
 	"TEXT",		LTYPEB, ATEXT,
 	"GLOBL",	LTYPEB, AGLOBL,
 	"DATA",		LTYPEC, ADATA,
@@ -684,6 +678,8 @@ cinit(void)
 		hash[i] = S;
 	for(i=0; itab[i].name; i++) {
 		s = slookup(itab[i].name);
+		if(s->value != 0)
+			yyerror("internal: duplicate %s", s->name);
 		s->type = itab[i].type;
 		s->value = itab[i].value;
 	}
@@ -702,14 +698,6 @@ syminit(Sym *s)
 
 	s->type = LNAME;
 	s->value = 0;
-}
-
-int
-isreg(Gen *g)
-{
-
-	USED(g);
-	return 1;
 }
 
 void
@@ -759,6 +747,7 @@ zaddr(Gen *a, int s)
 
 	case D_NONE:
 	case D_REG:
+	case D_SP:
 	case D_FREG:
 	case D_VREG:
 	case D_COND:
