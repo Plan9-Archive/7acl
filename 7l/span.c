@@ -5,9 +5,9 @@ static struct {
 	ulong	size;
 } pool;
 
-void	checkpool(Prog*, int);
-void 	flushpool(Prog*, int);
-long	pcldr(long, int);
+static void		checkpool(Prog*, int);
+static void 	flushpool(Prog*, int);
+static long	pcldr(long, int);
 
 static Optab *badop;
 static Oprang	oprange[ALAST];
@@ -151,7 +151,7 @@ span(void)
  * to go out of range of a 1Mb PC-relative offset
  * drop the pool now, and branch round it.
  */
-void
+static void
 checkpool(Prog *p, int skip)
 {
 	if(pool.size >= 0xffff0 || pcldr(p->pc+4+pool.size - pool.start+8, 0) == 0)
@@ -160,7 +160,7 @@ checkpool(Prog *p, int skip)
 		flushpool(p, 2);
 }
 
-void
+static void
 flushpool(Prog *p, int skip)
 {
 	Prog *q;
@@ -286,35 +286,21 @@ bitrot(vlong v)
 	return 0;
 }
 
-long
-immrot(ulong)
+static int
+isaddcon(vlong v)
 {
-	return 0;
+	if(v < 0)
+		return 0;
+	if((v & 0xFFF) == 0)
+		v >>= 12;
+	return v < 0xFFF;
 }
 
-long
+static long
 pcldr(long v, int rt)
 {
 	if(v >= -0xfffff && v <= 0xfffff && (v&3) == 0)
 		return (6<<27) | (((v>>2)&0x7ffff)<<5) | rt;
-	return 0;
-}
-
-long
-imms9(vlong v)
-{
-	if(v >= -256 && v < 256)
-		return (7<<27) | ((v&0x1ff)<<12);
-	return 0;
-}
-
-long
-immaddr(vlong v, int w)
-{
-	if(w > 1 && (v&(w-1)) == 0)
-		v /= w;
-	if(v >= 0 && v <= 0xfff)
-		return (7<<27) | (1<<24) | ((v&0xfff)<<10);
 	return 0;
 }
 
@@ -400,6 +386,9 @@ aclass(Adr *a)
 	case D_REG:
 		return C_REG;
 
+	case D_SP:
+		return C_RSP;
+
 	case D_COND:
 		return C_COND;
 
@@ -472,8 +461,6 @@ aclass(Adr *a)
 		return C_GOK;
 
 	case D_SPR:
-//		if(a->offset == D_FPCR)
-//			return C_FCR;
 		return C_SPR;
 
 	case D_OCONST:
@@ -506,10 +493,8 @@ aclass(Adr *a)
 				goto aconsize;
 
 			v = instoffset;
-			if(v >= 0){
-				if(v < 0xFFF || (v>>12) < 0xFFF)
-					return C_ADDCON;
-			}
+			if(isaddcon(v))
+				return C_ADDCON;
 			t = movcon(v);
 			if(t >= 0)
 				return C_MOVCON;
@@ -541,9 +526,8 @@ aclass(Adr *a)
 			}
 			if(!dlm) {
 				instoffset = s->value + a->offset - BIG;
-				t = immrot(instoffset);
-				if(t && instoffset != 0)
-					return C_RECON;
+				if(isaddcon(instoffset))
+					return C_AECON;
 			}
 			instoffset = s->value + a->offset + INITDAT;
 			return C_LCON;
@@ -555,9 +539,8 @@ aclass(Adr *a)
 		case D_PARAM:
 			instoffset = autosize + a->offset + SAVESIZE;
 		aconsize:
-			t = immrot(instoffset);
-			if(t)
-				return C_RACON;
+			if(isaddcon(instoffset))
+				return C_AACON;
 			return C_LACON;
 		}
 		return C_GOK;
@@ -572,7 +555,7 @@ Optab*
 oplook(Prog *p)
 {
 	int a1, a2, a3, r;
-	char *c1, *c3;
+	char *c1, *c2, *c3;
 	Optab *o, *e;
 
 	a1 = p->optab;
@@ -610,9 +593,10 @@ oplook(Prog *p)
 	}
 	e = oprange[r].stop;
 	c1 = xcmp[a1];
+	c2 = xcmp[a2];
 	c3 = xcmp[a3];
 	for(; o<e; o++)
-		if(o->a2 == a2)
+		if(o->a2 == a2 || c2[o->a2])
 		if(c1[o->a1])
 		if(c3[o->a3]) {
 			p->optab = (o-optab)+1;
@@ -634,8 +618,13 @@ cmp(int a, int b)
 	if(a == b)
 		return 1;
 	switch(a) {
+	case C_RSP:
+		if(b == C_REG)
+			return 1;
+		break;
+
 	case C_LCON:
-		if(b == C_RCON || b == C_NCON || b == C_ADDCON || b == C_MOVCON)
+		if(b == C_BITCON || b == C_ADDCON || b == C_MOVCON)
 			return 1;
 		break;
 
@@ -645,7 +634,7 @@ cmp(int a, int b)
 		break;
 
 	case C_LACON:
-		if(b == C_RACON)
+		if(b == C_AACON)
 			return 1;
 		break;
 
@@ -803,11 +792,28 @@ buildop(void)
 			oprange[ASUBW] = t;
 			oprange[ASUBSW] = t;
 			break;
-		case AAND:
+		case AAND:	/* logical immediate, logical shifted register */
+			oprange[AANDS] = t;
+			oprange[AANDSW] = t;
+			oprange[AANDW] = t;
 			oprange[AEOR] = t;
-			oprange[ASUB] = t;
+			oprange[AEORW] = t;
 			oprange[AORR] = t;
-			oprange[ABIC] = t;
+			oprange[AORRW] = t;
+			break;
+		case ABIC:	/* only logical shifted register */
+			oprange[ABICS] = t;
+			oprange[ABICSW] = t;
+			oprange[ABICW] = t;
+			oprange[AEON] = t;
+			oprange[AEONW] = t;
+			oprange[AORN] = t;
+			oprange[AORNW] = t;
+			break;
+		case ANEG:
+			oprange[ANEGS] = t;
+			oprange[ANEGSW] = t;
+			oprange[ANEGW] = t;
 			break;
 		case AADC:	/* rn=Rd */
 			oprange[AADCW] = t;
@@ -825,11 +831,15 @@ buildop(void)
 			break;
 		case ACMP:
 			oprange[ACMPW] = t;
-//			oprange[ATST] = t;
-//			oprange[ATEQ] = t;
-//			oprange[ACMN] = t;
+			oprange[ACMN] = t;
+			oprange[ACMNW] = t;
+			break;
+		case ATST:
+			oprange[ATSTW] = t;
 			break;
 		case AMVN:
+			/* register/register, and shifted */
+			oprange[AMVNW] = t;
 			break;
 		case AMOVK:
 			oprange[AMOVKW] = t;
@@ -895,7 +905,6 @@ buildop(void)
 			oprange[AMSUBW] = t;
 			oprange[ASMADDL] = t;
 			oprange[ASMSUBL] = t;
-			oprange[ASMULH] = t;
 			oprange[AUMADDL] = t;
 			oprange[AUMSUBL] = t;
 			break;
