@@ -36,9 +36,6 @@
 /* compiler allocates register variables F0 up */
 /* compiler allocates external registers F15 down */
 
-#define	SYSARG5(op0,op1,Cn,Cm,op2)	((op0)<<19|(op1)<<16|(Cn)<<12|(Cm)<<8|(op2)<<5)
-#define	SYSARG4(op1,Cn,Cm,op2)	SYSARG5(0,op1,Cn,Cm,op2)
-
 enum	as
 {
 	AXXX,
@@ -362,12 +359,12 @@ enum	as
 	ARETURN,
 	AEND,
 
-	ADIV,
-	ADIVW,
-	AUMUL,
-
 	ALAST,
 };
+
+/* form offset parameter to SYS; special register number */
+#define	SYSARG5(op0,op1,Cn,Cm,op2)	((op0)<<19|(op1)<<16|(Cn)<<12|(Cm)<<8|(op2)<<5)
+#define	SYSARG4(op1,Cn,Cm,op2)	SYSARG5(0,op1,Cn,Cm,op2)
 
 /* type/name */
 enum
@@ -383,31 +380,32 @@ enum
 
 /* type */
 	D_BRANCH,
-	D_OREG,
-	D_XPRE,
-	D_XPOST,
-	D_CONST,
-	D_DCONST,
-	D_FCONST,
-	D_SCONST,
-	D_REG,
-	D_FREG,
-	D_VREG,
-	D_SPR,
+	D_OREG,		/* offset(reg) */
+	D_XPRE,		/* offset(reg)! - pre-indexed */
+	D_XPOST,		/* (reg)offset! - post-indexed */
+	D_CONST,	/* 32-bit constant */
+	D_DCONST,	/* 64-bit constant */
+	D_FCONST,	/* floating-point constant */
+	D_SCONST,	/* short string constant */
+	D_REG,		/* Rn = Wn or Xn depending on op */
+	D_SP,		/* distinguish REGSP from REGZERO */
+	D_FREG,		/* Fn = Sn or Dn depending on op */
+	D_VREG,		/* Vn = SIMD register */
+	D_SPR,		/* special processor register */
 	D_FILE,
-	D_OCONST,
+	D_OCONST,	/* absolute address constant (unused) */
 	D_FILE1,
 
-	D_SHIFT,
-	D_PAIR,
-	D_ADDR,
-	D_ADRP,
-	D_ADRLO,
-	D_EXTREG,
-	D_ROFF,
-	D_COND,
-	D_VLANE,
-	D_VSET,
+	D_SHIFT,		/* Rm{, ashift #imm} */
+	D_PAIR,		/* pair of gprs */
+	D_ADDR,		/* address constant (dynamic loading) */
+	D_ADRP,		/* pc-relative addressing, page */
+	D_ADRLO,	/* low-order 12 bits of external reference */
+	D_EXTREG,	/* Rm{, ext #imm} */
+	D_ROFF,		/* register offset Rn+ext(Rm)<<s */
+	D_COND,		/* condition EQ, NE, etc */
+	D_VLANE,		/* Vn lane */
+	D_VSET,		/* set of Vn */
 
 	/* offset iff type is D_SPR */
 	D_DAIF	= SYSARG5(3,3,4,2,1),
