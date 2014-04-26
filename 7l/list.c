@@ -120,11 +120,8 @@ Dconv(Fmt *fp)
 
 	case D_SHIFT:
 		v = a->offset;
-		op = "<<>>->@>" + (((v>>5) & 3) << 1);
-		if(v & (1<<4))
-			sprint(str, "R%ld%c%cR%ld", v&15, op[0], op[1], (v>>8)&15);
-		else
-			sprint(str, "R%ld%c%c%ld", v&15, op[0], op[1], (v>>7)&31);
+		op = "<<>>->@>" + (((v>>22) & 3) << 1);
+		sprint(str, "R%ld%c%c%ld", (v>>16)&0x1F, op[0], op[1], (v>>10)&0x3F);
 		if(a->reg != NREG)
 			sprint(str+strlen(str), "(R%d)", a->reg);
 		break;
@@ -176,6 +173,13 @@ Dconv(Fmt *fp)
 		sprint(str, "R%d", a->reg);
 		if(a->name != D_NONE || a->sym != S)
 			sprint(str, "%N(R%d)(REG)", a, a->reg);
+		break;
+
+	case D_SP:
+		if(a->name != D_NONE || a->sym != S)
+			sprint(str, "%N(R%d)(REG)", a, a->reg);
+		else
+			strcpy(str, "SP");
 		break;
 
 	case D_COND:
