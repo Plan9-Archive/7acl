@@ -140,7 +140,6 @@ int	escchar(int);
 void	cinit(void);
 void	pinit(char*);
 void	cclean(void);
-int	isreg(Gen*);
 void	outcode(int, Gen*, int, Gen*);
 void	outcodec(int, int, Gen*, int, Gen*);
 void	outcode4(int, Gen*, int, Gen*, Gen*);
