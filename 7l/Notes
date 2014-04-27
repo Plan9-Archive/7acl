@@ -97,3 +97,4 @@ Need 32-bit versions of load signed byte/halfword instructions?
 FCMPE
 
 MOVI	#bimm, Rn	 -> MOV
+Edit x s/(.)<<30 .*(.)<<23.*(.)<<22.*(.)<<21.*(.)<<15/LDSTX(\1,\2,\3,\4,\5)
