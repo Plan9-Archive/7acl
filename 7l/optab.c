@@ -264,10 +264,10 @@ Optab	optab[] =
 	{ AFMOVD, 	C_FREG,	C_NONE,	C_XPRE,		23, 4, 0 },
 
 	/* special */
-	{ AMOV,		C_SPR,	C_NONE,	C_REG,		35, 4, 0 },  //
+	{ AMOV,		C_SPR,	C_NONE,	C_REG,		35, 4, 0 },
 	{ AMRS,		C_SPR,	C_NONE,	C_REG,		35, 4, 0 },
 
-	{ AMOV,		C_REG,	C_NONE,	C_SPR,		36, 4, 0 },  // 
+	{ AMOV,		C_REG,	C_NONE,	C_SPR,		36, 4, 0 },
 	{ AMSR,		C_REG,	C_NONE,	C_SPR,		36, 4, 0 },
 
 	{ AMOV,		C_LCON,	C_NONE,	C_SPR,		37, 4, 0 },
@@ -347,6 +347,11 @@ Optab	optab[] =
 
 	{ ADMB,		C_LCON,	C_NONE, 	C_NONE,		51, 4, 0 },
 	{ AHINT,		C_LCON,	C_NONE,	C_NONE,		52, 4, 0 },
+
+	{ ALDXR,		C_ZOREG,	C_NONE,	C_REG,		58, 4, 0 },
+	{ ALDXP,		C_ZOREG,	C_REG,	C_REG,		58, 4, 0 },
+	{ ASTXR,		C_REG,	C_REG,	C_ZOREG,		59, 4, 0 },
+	{ ASTXP,		C_REG, 	C_REG,	C_ZOREG,		59, 4, 0 },
 
 	{ AXXX,		C_NONE,	C_NONE,	C_NONE,		 0, 4, 0 },
 };
