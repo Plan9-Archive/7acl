@@ -248,7 +248,7 @@ TEXT	_arithextended(SB), $-4
 	CMN	R3.UXTX<<2, SP
 	CMP	R3.UXTX<<2, SP
 	CMPW	R3.UXTW, R4
-//	CMP	R5.SXTW, R4
+	CMP	R5.SXTW, R4
 	RETURN
 
 TEXT _movreg(SB), $-4
