@@ -18,6 +18,8 @@
 #define	LDSTR9S(sz,v,opc)	((sz)<<30 | 7<<27 | (v)<<26 | 0<<24 | (opc)<<22)
 #define	LD2STR(o)	((o) & ~(3<<22))
 
+#define	LDSTX(sz,o2,l,o1,o0)	((sz)<<30 | 0x8<<24 | (o2)<<23 | (l)<<22 | (o1)<<21 | (o0)<<15)
+
 #define	FPCMP(m,s,type,op,op2)	((m)<<31 | (s)<<29 | 0x1E<<24 | (type)<<22 | 1<<21 | (op)<<14 | 8<<10 | (op2))
 #define	FPCCMP(m,s,type,op)	((m)<<31 | (s)<<29 | 0x1E<<24 | (type)<<22 | 1<<21 | 1<<10 | (op)<<4)
 #define	FPOP1S(m,s,type,op)	((m)<<31 | (s)<<29 | 0x1E<<24 | (type)<<22 | 1<<21 | (op)<<15 | 0x10<<10)
@@ -25,7 +27,6 @@
 #define	FPCVTI(sf,s,type,rmode,op)	((sf)<<31 | (s)<<29 | 0x1E<<24 | (type)<<22 | 1<<21 | (rmode)<<19 | (op)<<16 | 0<<10)
 #define	FPCVTF(sf,s,type,rmode,op,scale)	((sf)<<31 | (s)<<29 | 0x1E<<24 | (type)<<22 | 0<<21 | (rmode)<<19 | (op)<<16 | (scale)<<10)
 #define	ADR(p,o,rt)	((p)<<31 | ((o)&3)<<29 | (0x10<<24) | (((o>>2)&0x7FFFF)<<5) | (rt));	/* adr 4(pc), Rt */
-
 
 #define	LSL0_32	(2<<13)
 #define	LSL0_64	(3<<13)
@@ -53,6 +54,7 @@ static long	opfprrr(int);
 static long	opldr12(int);
 static long	opldrpp(int);
 static long	opload(int);
+static long	opstore(int);
 static long	omovlit(int, Prog*, Adr*, int);
 
 /*
@@ -697,6 +699,28 @@ asmout(Prog *p, Optab *o)
 		o1 |= rf<<16 | cond<<12  | rt<<5 | nzcv;
 		break;
 
+	case 58:	/* ldxr */
+		o1 = opload(p->as);
+		o1 |= 0x1F<<16;
+		o1 |= p->from.reg<<5;
+		if(p->reg != NREG)
+			o1 |= p->reg<<10;
+		else
+			o1 |= 0x1F<<10;
+		o1 |= p->to.reg;
+		break;
+
+	case 59:	/* stxr */
+		o1 = opstore(p->as);
+		o1 |= p->reg << 16;
+		if(p->from3.type != D_NONE)
+			o1 |= p->from3.reg<<10;
+		else
+			o1 |= 0x1F<<10;
+		o1 |= p->to.reg<<5;
+		o1 |= p->from.reg;
+		break;
+
 	case 60:	/* adrp label,r */
 		d = brdist(p, 12, 21, 0);
 		o1 = ADR(1, d, p->to.reg);
@@ -1204,21 +1228,55 @@ static long
 opload(int a)
 {
 	switch(a){
-	case ALDAR:	return 3<<30 | 0x8<<24 | 1<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDARW:	return 2<<30 | 0x8<<24 | 1<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDARB:	return 0<<30 | 0x8<<24 | 1<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDARH:	return 1<<30 | 0x8<<24 | 1<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDAXP:	return 2<<30 | 0x8<<24 | 0<<23 | 1<<22 | 1<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDAXPW:	return 2<<30 | 0x8<<24 | 0<<23 | 1<<22 | 1<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDAXR:	return 3<<30 | 0x8<<24 | 0<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDAXRW:	return 2<<30 | 0x8<<24 | 0<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDAXRB:	return 0<<30 | 0x8<<24 | 0<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
-	case ALDAXRH:	return 1<<30 | 0x8<<24 | 0<<23 | 1<<22 | 0<<21 | 0x1F<<16 | 1<<15 | 0x1F<<10;
+	case ALDAR:	return LDSTX(3,1,1,0,1) | 0x1F<<10;
+	case ALDARW:	return LDSTX(2,1,1,0,1) | 0x1F<<10;
+	case ALDARB:	return LDSTX(0,1,1,0,1) | 0x1F<<10;
+	case ALDARH:	return LDSTX(1,1,1,0,1) | 0x1F<<10;
+	case ALDAXP:	return LDSTX(3,0,1,1,1);
+	case ALDAXPW:	return LDSTX(2,0,1,1,1);
+	case ALDAXR:	return LDSTX(3,0,1,0,1) | 0x1F<<10;
+	case ALDAXRW:	return LDSTX(2,1,1,0,1) | 0x1F<<10;
+	case ALDAXRB:	return LDSTX(0,0,1,0,1) | 0x1F<<10;
+	case ALDAXRH:	return LDSTX(1,0,1,0,1) | 0x1F<<10;
+	case ALDXR:		return LDSTX(3,0,1,0,0) | 0x1F<<10;
+	case ALDXRB:		return LDSTX(0,0,1,0,0) | 0x1F<<10;
+	case ALDXRH:		return LDSTX(1,0,1,0,0) | 0x1F<<10;
+	case ALDXRW:		return LDSTX(2,0,1,0,0) | 0x1F<<10;
+	case ALDXP:		return LDSTX(3,0,1,1,0);
+	case ALDXPW:		return LDSTX(2,0,1,1,0);
 	case AMOVNP:	return S64 | 0<<30 | 5<<27 | 0<<26 | 0<<23 | 1<<22;
 	case AMOVNPW:	return S32 | 0<<30 | 5<<27 | 0<<26 | 0<<23 | 1<<22;
 	}
-	diag("bad opload %A", a);
-	prasm(curp);
+	diag("bad opload %A\n%P", a, curp);
+	return 0;
+}
+
+static long
+opstore(int a)
+{
+	switch(a){
+	case ASTLR:		return LDSTX(3,1,0,0,1) | 0x1F<<10;
+	case ASTLRB:		return LDSTX(0,1,0,0,1) | 0x1F<<10;
+	case ASTLRH:		return LDSTX(1,1,0,0,1) | 0x1F<<10;
+	case ASTLP:		return LDSTX(3,0,0,1,1);
+	case ASTLPW:		return LDSTX(2,0,0,1,1);
+	case ASTLRW:		return LDSTX(2,1,0,0,1) | 0x1F<<10;
+	case ASTLXP:		return LDSTX(2,0,0,1,1);
+	case ASTLXPW:		return LDSTX(3,0,0,1,1);
+	case ASTLXR:		return LDSTX(3,0,0,0,1) | 0x1F<<10;
+	case ASTLXRB:		return LDSTX(0,0,0,0,1) | 0x1F<<10;
+	case ASTLXRH:		return LDSTX(1,0,0,0,1) | 0x1F<<10;
+	case ASTLXRW:		return LDSTX(2,0,0,0,1) | 0x1F<<10;
+	case ASTXR:		return LDSTX(3,0,0,0,0) | 0x1F<<10;
+	case ASTXRB:		return LDSTX(0,0,0,0,0) | 0x1F<<10;
+	case ASTXRH:		return LDSTX(1,0,0,0,0) | 0x1F<<10;
+	case ASTXP:		return LDSTX(3,0,0,1,0);
+	case ASTXPW:		return LDSTX(2,0,0,1,0);
+	case ASTXRW:		return LDSTX(2,0,0,0,0) | 0x1F<<10;
+	case AMOVNP:	return S64 | 0<<30 | 5<<27 | 0<<26 | 0<<23 | 1<<22;
+	case AMOVNPW:	return S32 | 0<<30 | 5<<27 | 0<<26 | 0<<23 | 1<<22;
+	}
+	diag("bad opstore %A\n%P", a, curp);
 	return 0;
 }
 
