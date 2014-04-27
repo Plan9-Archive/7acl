@@ -260,6 +260,11 @@ TEXT _movreg(SB), $-4
 	MVNW	R1, R2
 	RETURN
 
+TEXT	_ldxr(SB), $-4
+	LDXR	(R5), R4
+	STXR	R4, (R5), R3
+	RETURN
+
 TEXT	_shrrr(SB), $-4
 	LSL	R1, R2, R3
 	LSLW	R1, R2, R3
