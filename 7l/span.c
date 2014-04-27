@@ -702,7 +702,7 @@ cmp(int a, int b)
 		break;
 
 	case C_UOREG4K:
-		if(b == C_ZOREG || b == C_PSAUTO || b == C_PPAUTO)
+		if(b == C_ZOREG || b == C_PSAUTO || b == C_PSOREG || b == C_PPAUTO || b == C_PPOREG)
 			return 1;
 		break;
 
@@ -1099,18 +1099,18 @@ buildop(void)
 		case AMSR:
 			break;
 
-		case ALDX:
-			oprange[ALDXB] = t;
-			oprange[ALDXH] = t;
-			oprange[ALDXW] = t;
+		case ALDXR:
+			oprange[ALDXRB] = t;
+			oprange[ALDXRH] = t;
+			oprange[ALDXRW] = t;
 			break;
 		case ALDXP:
 			oprange[ALDXPW] = t;
 			break;
-		case ASTX:
-			oprange[ASTXB] = t;
-			oprange[ASTXH] = t;
-			oprange[ASTXW] = t;
+		case ASTXR:
+			oprange[ASTXRB] = t;
+			oprange[ASTXRH] = t;
+			oprange[ASTXRW] = t;
 			break;
 		case ASTXP:
 			oprange[ASTXPW] = t;
