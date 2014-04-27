@@ -142,6 +142,12 @@ enum	as
 	ALDAXRB,
 	ALDAXRH,
 	ALDAXRW,
+	ALDX,
+	ALDXB,
+	ALDXH,
+	ALDXW,
+	ALDXP,
+	ALDXPW,
 	ALSL,
 	ALSLW,
 	ALSR,
@@ -214,6 +220,12 @@ enum	as
 	ASMSUBL,
 	ASMULH,
 	ASMULL,
+	ASTX,
+	ASTXB,
+	ASTXH,
+	ASTXP,
+	ASTXPW,
+	ASTXW,
 	ASTLR,
 	ASTLRB,
 	ASTLRH,
@@ -279,11 +291,6 @@ enum	as
 	AMOVPS,
 	AMOVPSW,
 	AMOVPW,
-
-	AMOVXX,
-	AMOVXB,
-	AMOVXH,
-	AMOVXP,
 
 /* 
  * Do not reorder or fragment the conditional branch 
