@@ -21,7 +21,7 @@
 %token	<lval>	LTYPEG LTYPEH LTYPEI LTYPEJ LTYPEK
 %token	<lval>	LTYPEL LTYPEM LTYPEN LTYPEO LTYPEP LTYPEQ
 %token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEX LTYPEY LTYPEZ
-%token	<lval>	LMOVK LDMB
+%token	<lval>	LMOVK LDMB LSTXR
 %token	<lval>	LCONST LSP LSB LFP LPC
 %token	<lval>	LR LREG LF LFREG LV LVREG LC LCREG LFCR
 %token	<lval>	LCOND LS LAT LEXT LSPR LSPREG LVTYPE
@@ -368,6 +368,13 @@ inst:
 |	LDMB imm
 	{
 		outcode($1, &$2, NREG, &nullgen);
+	}
+/*
+ * STXR
+ */
+|	LSTXR reg ',' gen ',' sreg
+	{
+		outcode($1, &$2, $6, &$4);
 	}
 /*
  * END
