@@ -200,6 +200,8 @@ addpool(Prog *p, Adr *a)
 
 	t = zprg;
 	t.as = AWORD;	/* TO DO: DWORD */
+	if(p->as == AMOV)
+		t.as = ADWORD;
 
 	switch(c) {
 	default:
@@ -627,6 +629,9 @@ cmp(int a, int b)
 		if(b == C_BITCON || b == C_ADDCON || b == C_MOVCON)
 			return 1;
 		break;
+
+	case C_VCON:
+		return cmp(C_LCON, b);
 
 	case C_MOVCON:
 		if(b == C_ADDCON)
