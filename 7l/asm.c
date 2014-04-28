@@ -46,7 +46,7 @@ asmb(void)
 	for(p = firstp; p != P; p = p->link) {
 		if(p->as == ATEXT) {
 			curtext = p;
-			autosize = p->to.offset + SAVESIZE;
+			autosize = p->to.offset + PCSZ;
 		}
 		if(p->pc != pc) {
 			diag("phase error %llux sb %llux",
