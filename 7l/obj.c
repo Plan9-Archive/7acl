@@ -509,6 +509,8 @@ zaddr(uchar *p, Adr *a, Sym *h[])
 		l = p[4] | (p[5]<<8) | (p[6]<<16) | (p[7]<<24);
 		a->offset = l;
 		c += 4;
+		if(a->type == D_CONST && l == 0)
+			a->reg = REGZERO;
 		break;
 
 	case D_DCONST:
@@ -518,6 +520,8 @@ zaddr(uchar *p, Adr *a, Sym *h[])
 		a->offset |= (vlong)l << 32;
 		c += 8;
 		a->type = D_CONST;
+		if(a->offset == 0)
+			a->reg = REGZERO;
 		break;
 
 	case D_SCONST:
@@ -1011,9 +1015,12 @@ loop:
 		}
 		skip = 0;
 		curtext = p;
-		autosize = (p->to.offset+3L) & ~3L;
-		p->to.offset = autosize;
-		autosize += 4;
+		if(p->to.offset > 0){
+			autosize = (p->to.offset+7L) & ~7L;
+			p->to.offset = autosize;
+			autosize += PCSZ;
+		}else
+			autosize = 0;
 		s = p->from.sym;
 		if(s == S) {
 			diag("TEXT must have a name\n%P", p);

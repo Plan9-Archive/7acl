@@ -35,7 +35,7 @@ span(void)
 		if(m == 0) {
 			if(p->as == ATEXT) {
 				curtext = p;
-				autosize = p->to.offset + SAVESIZE;
+				autosize = p->to.offset + PCSZ;
 				if(p->from.sym != S)
 					p->from.sym->value = c;
 				/* need passes to resolve branches */
@@ -103,7 +103,7 @@ span(void)
 			if(m == 0) {
 				if(p->as == ATEXT) {
 					curtext = p;
-					autosize = p->to.offset + SAVESIZE;
+					autosize = p->to.offset + PCSZ;
 					if(p->from.sym != S)
 						p->from.sym->value = c;
 					continue;
@@ -453,7 +453,7 @@ aclass(Adr *a)
 			return autoclass[constclass(instoffset)];
 
 		case D_PARAM:
-			instoffset = autosize + a->offset + SAVESIZE;
+			instoffset = autosize + a->offset + PCSZ;
 			return autoclass[constclass(instoffset)];
 
 		case D_NONE:
@@ -491,10 +491,12 @@ aclass(Adr *a)
 
 		case D_NONE:
 			instoffset = a->offset;
-			if(a->reg != NREG)
+			if(a->reg != NREG && a->reg != REGZERO)
 				goto aconsize;
 
 			v = instoffset;
+			if(v == 0)
+				return C_ZCON;
 			if(isaddcon(v))
 				return C_ADDCON;
 			t = movcon(v);
@@ -539,7 +541,7 @@ aclass(Adr *a)
 			goto aconsize;
 
 		case D_PARAM:
-			instoffset = autosize + a->offset + SAVESIZE;
+			instoffset = autosize + a->offset + PCSZ;
 		aconsize:
 			if(isaddcon(instoffset))
 				return C_AACON;
@@ -625,8 +627,18 @@ cmp(int a, int b)
 			return 1;
 		break;
 
+	case C_REG:
+		if(b == C_ZCON)
+			return 1;
+		break;
+
+	case C_ADDCON:
+		if(b == C_ZCON)
+			return 1;
+		break;
+
 	case C_LCON:
-		if(b == C_BITCON || b == C_ADDCON || b == C_MOVCON)
+		if(b == C_ZCON || b == C_BITCON || b == C_ADDCON || b == C_MOVCON)
 			return 1;
 		break;
 
@@ -634,7 +646,7 @@ cmp(int a, int b)
 		return cmp(C_LCON, b);
 
 	case C_MOVCON:
-		if(b == C_ADDCON)
+		if(b == C_ADDCON || b == C_ZCON)
 			return 1;
 		break;
 

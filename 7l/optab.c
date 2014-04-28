@@ -33,9 +33,12 @@ Optab	optab[] =
 	{ ACMP,		C_EXTREG,C_RSP,	C_NONE,		27, 4, 0 },
 
 	{ AMOV,		C_RSP,	C_NONE,	C_RSP,		24, 4, 0 },
-	{ AMOVW,		C_REG,	C_NONE,	C_REG,		24, 4, 0 },
+//	{ AMOVW,		C_REG,	C_NONE,	C_REG,		24, 4, 0 },
 	{ AMVN,		C_REG,	C_NONE,	C_REG,		24, 4, 0 },
-	/* TO DO: MOVH, MOVBU, MOVB */
+	{ AMOVB,		C_REG,	C_NONE,	C_REG,		45, 4, 0 },
+	{ AMOVBU,	C_REG,	C_NONE,	C_REG,		45, 4, 0 },
+	{ AMOVH,		C_REG,	C_NONE,	C_REG,		45, 4, 0 },	/* also MOVHU */
+	{ AMOVW,		C_REG,	C_NONE,	C_REG,		45, 4, 0 },	/* also MOVWU */
 	/* TO DO: MVN C_SHIFT */
 
 	{ AMOVW,		C_MOVCON,	C_NONE,	C_REG,		32, 4, 0 },
@@ -121,17 +124,13 @@ Optab	optab[] =
 	{ AMOVBU,	C_REG,	C_NONE,	C_UOREG4K,		20, 4, 0 },  // 
 
 	{ AMOVH,	C_REG,	C_NONE,	C_SEXT2,		20, 4, REGSB },  //
-	{ AMOVH,	C_REG,	C_NONE,	C_UAUTO4K,	20,	4, REGSP },	//
 	{ AMOVH,	C_REG,	C_NONE,	C_UAUTO8K,	20,	4, REGSP },	//
 	{ AMOVH,	C_REG,	C_NONE,	C_ZOREG,		20, 4, 0 },  // 
-	{ AMOVH,	C_REG,	C_NONE,	C_UOREG4K,		20,	4, 0 },	//
 	{ AMOVH,	C_REG,	C_NONE,	C_UOREG8K,	20,	4, 0 },	//
 
 	{ AMOVW,	C_REG,	C_NONE,	C_SEXT4,		20, 4, REGSB },  //
-	{ AMOVW,	C_REG,	C_NONE,	C_UAUTO4K,	20,	4, REGSP },	//
 	{ AMOVW,	C_REG,	C_NONE,	C_UAUTO16K,	20,	4, REGSP },	//
 	{ AMOVW,	C_REG,	C_NONE,	C_ZOREG,		20, 4, 0 },  // 
-	{ AMOVW,	C_REG,	C_NONE,	C_UOREG4K,		20,	4, 0 },	//
 	{ AMOVW,	C_REG,	C_NONE,	C_UOREG16K,	20,	4, 0 },	//
 
 	/* unscaled 9-bit signed displacement store */
@@ -170,20 +169,16 @@ Optab	optab[] =
 	{ AMOVBU,	C_NSOREG,C_NONE,	C_REG,	21, 4, REGSP },  // 
 
 	{ AMOVH,	C_SEXT2,	C_NONE,	C_REG,		21, 4, REGSB },  // 
-	{ AMOVH,	C_UAUTO4K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVH,	C_UAUTO8K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVH,	C_NSAUTO,C_NONE,	C_REG,	21, 4, REGSP },  // 
 	{ AMOVH,	C_ZOREG,C_NONE,	C_REG,		21, 4, 0 },  // 
-	{ AMOVH,	C_UOREG4K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVH,	C_UOREG8K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVH,	C_NSOREG,C_NONE,	C_REG,	21, 4, REGSP },  // 
 
 	{ AMOVW,	C_SEXT4,	C_NONE,	C_REG,		21, 4, REGSB },  // 
-	{ AMOVW,	C_UAUTO4K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVW,	C_UAUTO16K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVW,	C_NSAUTO,C_NONE,	C_REG,	21, 4, REGSP },  // 
 	{ AMOVW,	C_ZOREG,C_NONE,	C_REG,		21, 4, 0 },  // 
-	{ AMOVW,	C_UOREG4K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVW,	C_UOREG16K,C_NONE,	C_REG,		21, 4, REGSP },  // 
 	{ AMOVW,	C_NSOREG,C_NONE,	C_REG,	21, 4, REGSP },  // 
 
@@ -351,7 +346,7 @@ Optab	optab[] =
 	{ ALDXR,		C_ZOREG,	C_NONE,	C_REG,		58, 4, 0 },
 	{ ALDXP,		C_ZOREG,	C_REG,	C_REG,		58, 4, 0 },
 	{ ASTXR,		C_REG,	C_REG,	C_ZOREG,		59, 4, 0 },
-	{ ASTXP,		C_REG, 	C_REG,	C_ZOREG,		59, 4, 0 },
+	{ ASTXP,		C_REG, C_REG,	C_ZOREG,		59, 4, 0 },
 
 	{ AXXX,		C_NONE,	C_NONE,	C_NONE,		 0, 4, 0 },
 };
