@@ -354,7 +354,7 @@ asmout(Prog *p, Optab *o)
 
 	case 22:	/* movT (R)O!,R; movT O(R)!, R -> ldrT */
 		v = p->from.offset;
-		if(v < -128 || v > 127)
+		if(v < -256 || v > 255)
 			diag("offset out of range\n%P", p);
 		o1 = opldrpp(p->as);
 		if(p->from.type == D_XPOST)
@@ -366,7 +366,7 @@ asmout(Prog *p, Optab *o)
 
 	case 23:	/* movT R,(R)O!; movT O(R)!, R -> strT */
 		v = p->to.offset;
-		if(v < -128 || v > 127)
+		if(v < -256 || v > 255)
 			diag("offset out of range\n%P", p);
 		o1 = LD2STR(opldrpp(p->as));
 		if(p->to.type == D_XPOST)
