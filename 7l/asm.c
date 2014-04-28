@@ -627,7 +627,7 @@ chipfloat(Ieee *e)
 
 	for(n = sizeof(chipfloats)/sizeof(chipfloats[0]); --n >= 0;){
 		p = &chipfloats[n];
-		if(p->l == e->l && p->h == e->h)
+		if(p->l == e->l && p->h == e->h && 0)
 			return n;		/* TO DO: return imm8 encoding */
 	}
 	return -1;
