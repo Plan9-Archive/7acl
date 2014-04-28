@@ -68,7 +68,12 @@ machcap(Node *n)
 	case OLO:
 	case OLS:
 		return 1;
+
 	case ONEG:
+		if(typechlv[n->left->type->etype])
+			return 1;
+		break;
+
 	case OCOM:
 		break;
 	}

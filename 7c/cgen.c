@@ -76,6 +76,19 @@ cgenrel(Node *n, Node *nn, int inrel)
 		diag(n, "unknown op in cgen: %O", o);
 		break;
 
+	case ONEG:
+	case OCOM:
+		if(nn == Z) {
+			nullwarn(l, Z);
+			break;
+		}
+		regalloc(&nod, l, nn);
+		cgen(l, &nod);
+		gopcode(o, &nod, Z, &nod);
+		gmove(&nod, nn);
+		regfree(&nod);
+		break;
+
 	case OAS:
 		if(l->op == OBIT)
 			goto bitas;
@@ -167,13 +180,6 @@ cgenrel(Node *n, Node *nn, int inrel)
 		goto muldiv;
 
 	case OSUB:
-		if(nn != Z)
-		if(l->op == OCONST)
-		if(!typefd[n->type->etype]) {
-			cgen(r, nn);
-			gopcode(o, Z, l, nn);
-			break;
-		}
 	case OADD:
 	case OAND:
 	case OOR:

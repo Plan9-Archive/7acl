@@ -49,7 +49,7 @@ loop1:
 			/*
 			 * elide shift into D_SHIFT operand of subsequent instruction
 			 */
-			if(shiftprop(r)) {
+			if(0 && shiftprop(r)) {
 				excise(r);
 				t++;
 			}
@@ -60,6 +60,19 @@ loop1:
 				constprop(&p->from, &p->to, r->s1);
 			else if(regtyp(&p->from))
 			if(p->from.type == p->to.type) {
+				if(copyprop(r)) {
+					excise(r);
+					t++;
+				} else
+				if(subprop(r) && copyprop(r)) {
+					excise(r);
+					t++;
+				}
+			}
+			if(regzer(&p->from))
+			if(p->to.type == D_REG) {
+				p->from.type = D_REG;
+				p->from.reg = REGZERO;
 				if(copyprop(r)) {
 					excise(r);
 					t++;
@@ -82,11 +95,12 @@ loop1:
 		default:
 			continue;
 		case AEOR:
+		case AEORW:
 			/*
 			 * EOR -1,x,y => MVN x,y
 			 */
 			if(p->from.type == D_CONST && p->from.offset == -1) {
-				p->as = AMVN;
+				p->as = p->as == AEOR? AMVN: AMVNW;
 				p->from.type = D_REG;
 				if(p->reg != NREG)
 					p->from.reg = p->reg;
@@ -250,12 +264,30 @@ uniqs(Reg *r)
 	return r1;
 }
 
+/*
+ * convert references to $0 to references to ZR (REGZERO)
+ */
+int
+regzer(Adr *a)
+{
+	switch(a->type){
+	case D_CONST:
+		return a->sym == S && a->offset == 0;
+	case D_REG:
+		return a->reg == REGZERO;
+	}
+	return 0;
+}
+
 int
 regtyp(Adr *a)
 {
 
-	if(a->type == D_REG)
+	if(a->type == D_REG){
+		if(a->reg == REGZERO)
+			return 0;
 		return 1;
+	}
 	if(a->type == D_FREG)
 		return 1;
 	return 0;
@@ -300,13 +332,18 @@ subprop(Reg *r0)
 
 		case ACMP:
 		case ACMN:
+		case AADC:
+		case AADCS:
 		case AADD:
+		case AADDS:
 		case ASUB:
+		case ASUBS:
 		case ALSL:
 		case ALSR:
 		case AASR:
 		case AORR:
 		case AAND:
+		case AANDS:
 		case AEOR:
 		case AMUL:
 		case ASDIV:
@@ -314,13 +351,18 @@ subprop(Reg *r0)
 
 		case ACMPW:
 		case ACMNW:
+		case AADCW:
+		case AADCSW:
+		case AADDSW:
 		case AADDW:
+		case ASUBSW:
 		case ASUBW:
 		case ALSLW:
 		case ALSRW:
 		case AASRW:
 		case AORRW:
 		case AANDW:
+		case AANDSW:
 		case AEORW:
 		case AMULW:
 		case ASDIVW:
@@ -344,6 +386,16 @@ subprop(Reg *r0)
 			}
 			break;
 
+		case ANEG:
+		case ANEGS:
+		case ANEGSW:
+		case ANEGW:
+		case ANGC:
+		case ANGCS:
+		case ANGCSW:
+		case ANGCW:
+		case AFNEGD:
+		case AFNEGS:
 		case AFMOVS:
 		case AFMOVD:
 		case AMOVW:
@@ -877,6 +929,8 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case AMOVBU:
 	case AMOVW:
 	case AMOVWU:
+	case ANEG:
+	case ANEGS:
 	case AFCVTSD:
 	case AFCVTDS:
 	case AFCVTZSD:
@@ -895,6 +949,13 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case AUCVTFS:
 	case AUCVTFWD:
 	case AUCVTFWS:
+	case AFNEGD:
+	case AFNEGS:
+	case AFABSD:
+	case AFABSS:
+	case AFSQRTD:
+	case AFSQRTS:
+	case ACASE:
 #ifdef YYY
 		if(p->scond&(C_WBIT|C_PBIT))
 		if(v->type == D_REG) {
@@ -928,17 +989,28 @@ copyu(Prog *p, Adr *v, Adr *s)
 
 
 	case AADD:	/* read, read, write */
+	case AADDW:
 	case ASUB:
+	case ASUBW:
 	case ALSL:
+	case ALSLW:
 	case ALSR:
+	case ALSRW:
 	case AASR:
+	case AASRW:
 	case AORR:
+	case AORRW:
 	case AAND:
+	case AANDW:
 	case AEOR:
+	case AEORW:
 	case AMUL:
+	case AMULW:
 	case AUMULL:
 	case ASDIV:
+	case ASDIVW:
 	case AUDIV:
+	case AUDIVW:
 	case AFADDS:
 	case AFADDD:
 	case AFSUBS:
@@ -947,12 +1019,6 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case AFMULD:
 	case AFDIVS:
 	case AFDIVD:
-
-	case AFCMPS:
-	case AFCMPD:
-	case ACMP:
-	case ACMN:
-	case ACASE:
 		if(s != A) {
 			if(copysub(&p->from, v, s, 1))
 				return 1;
@@ -996,6 +1062,13 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case ABLT:
 	case ABGT:
 	case ABLE:
+
+	case AFCMPS:
+	case AFCMPD:
+	case ACMP:
+	case ACMPW:
+	case ACMN:
+	case ACMNW:
 		if(s != A) {
 			if(copysub(&p->from, v, s, 1))
 				return 1;
@@ -1064,17 +1137,30 @@ a2type(Prog *p)
 	case ACMN:
 
 	case AADD:
+	case AADDW:
 	case ASUB:
+	case ASUBW:
 	case ALSL:
+	case ALSLW:
 	case ALSR:
+	case ALSRW:
 	case AASR:
+	case AASRW:
+	case ANEG:
+	case ANEGW:
 	case AORR:
+	case AORRW:
 	case AAND:
+	case AANDW:
 	case AEOR:
+	case AEORW:
 	case AMUL:
+	case AMULW:
 	case AUMULL:
 	case ASDIV:
+	case ASDIVW:
 	case AUDIV:
+	case AUDIVW:
 		return D_REG;
 
 	case AFCMPS:
@@ -1131,9 +1217,10 @@ copyau(Adr *a, Adr *v)
 			if(v->reg == a->reg)
 				return 1;
 		} else if(a->type == D_SHIFT) {
-			if((a->offset&0xf) == v->reg)
+			if(((a->offset>>16)&0x1F) == v->reg)
 				return 1;
-			if((a->offset&(1<<4)) && (a->offset>>8) == v->reg)
+		} else if(a->type == D_EXTREG) {
+			if(a->reg == v->reg || ((a->offset>>16)&0x1F) == v->reg)
 				return 1;
 		}
 	}
@@ -1166,10 +1253,8 @@ copysub(Adr *a, Adr *v, Adr *s, int f)
 	if(f)
 	if(copyau(a, v)) {
 		if(a->type == D_SHIFT) {
-			if((a->offset&0xf) == v->reg)
-				a->offset = (a->offset&~0xf)|s->reg;
-			if((a->offset&(1<<4)) && (a->offset>>8) == v->reg)
-				a->offset = (a->offset&~(0xf<<8))|(s->reg<<8);
+			if(((a->offset>>16)&0x1F) == v->reg)
+				a->offset = (a->offset&~(0x1F<<16))|(s->reg<<16);
 		} else
 			a->reg = s->reg;
 	}

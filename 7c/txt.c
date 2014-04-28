@@ -1115,6 +1115,12 @@ gopcode(int o, Node *f1, Node *f2, Node *t)
 			a = AUDIV;
 		break;
 
+	case ONEG:
+		a = ANEGW;
+		if(isv(et))
+			a = ANEG;
+		break;
+
 	case OCASE:
 		a = ACASE;	/* ACASEW? */
 		break;
