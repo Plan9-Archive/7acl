@@ -203,6 +203,7 @@ asmout(Prog *p, Optab *o)
 	case 11:	/* dword */
 		switch(aclass(&p->to)) {
 		case C_VCON:
+		case C_ZCON:
 		case C_LCON:
 			if(!dlm)
 				break;
@@ -221,7 +222,7 @@ asmout(Prog *p, Optab *o)
 		o1 = omovlit(p->as, p, &p->from, p->to.reg);
 		break;
 
-	case 13:	/* op $lcon, [R], R (64 bit literal) */
+	case 13:	/* addop $lcon, [R], R (64 bit literal) */
 		o1 = omovlit(AMOV, p, &p->from, REGTMP);
 		if(!o1)
 			break;
@@ -325,27 +326,27 @@ asmout(Prog *p, Optab *o)
 		break;
 
 	case 20:	/* movT R,O(R) -> strT */
-		aclass(&p->to);
+		v = regoff(&p->to);
 		r = p->to.reg;
 		if(r == NREG)
 			r = o->param;
-		if(instoffset < 0){	/* unscaled 9-bit signed */
-			o1 = olsr9s(opstr9(p->as), instoffset, r, p->from.reg);
+		if(v < 0){	/* unscaled 9-bit signed */
+			o1 = olsr9s(opstr9(p->as), v, r, p->from.reg);
 		}else{
-			v = offsetshift(instoffset, o->a3);
+			v = offsetshift(v, o->a3);
 			o1 = olsr12u(opstr12(p->as), v, r, p->from.reg);
 		}
 		break;
 
 	case 21:	/* movT O(R),R -> ldrT */
-		aclass(&p->from);
+		v = regoff(&p->from);
 		r = p->from.reg;
 		if(r == NREG)
 			r = o->param;
-		if(instoffset < 0){	/* unscaled 9-bit signed */
-			o1 = olsr9s(opldr9(p->as), instoffset, r, p->to.reg);
+		if(v < 0){	/* unscaled 9-bit signed */
+			o1 = olsr9s(opldr9(p->as), v, r, p->to.reg);
 		}else{
-			v = offsetshift(instoffset, o->a1);
+			v = offsetshift(v, o->a1);
 			//print("offset=%lld v=%ld a1=%d\n", instoffset, v, o->a1);
 			o1 = olsr12u(opldr12(p->as), v, r, p->to.reg);
 		}
@@ -420,6 +421,19 @@ asmout(Prog *p, Optab *o)
 		if(r == NREG)
 			r = rt;
 		o1 |= (r<<5) | rt;
+		break;
+
+	case 28:	/* logop $lcon, [R], R (64 bit literal) */
+		o1 = omovlit(AMOV, p, &p->from, REGTMP);
+		if(!o1)
+			break;
+		r = p->reg;
+		if(r == NREG)
+			r = p->to.reg;
+		o2 = oprrr(p->as);
+		o2 |= REGTMP << 16;	/* shift is 0 */
+		o2 |= r << 5;
+		o2 |= p->to.reg;
 		break;
 
 	case 30:	/* movT R,L(R) -> strT */
