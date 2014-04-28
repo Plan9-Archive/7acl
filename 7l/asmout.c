@@ -346,6 +346,7 @@ asmout(Prog *p, Optab *o)
 			o1 = olsr9s(opldr9(p->as), instoffset, r, p->to.reg);
 		}else{
 			v = offsetshift(instoffset, o->a1);
+			//print("offset=%lld v=%ld a1=%d\n", instoffset, v, o->a1);
 			o1 = olsr12u(opldr12(p->as), v, r, p->to.reg);
 		}
 		break;
@@ -594,15 +595,21 @@ asmout(Prog *p, Optab *o)
 		o1 = opextr(p->as, p->from.offset, p->from3.reg, p->reg, p->to.reg);
 		break;
 
-	case 45:	/* sxt/uxt[bhw] R,R */
+	case 45:	/* sxt/uxt[bhw] R,R; movT R,R -> sxtT R,R */
 		rf = p->from.reg;
 		rt = p->to.reg;
 		switch(p->as){
+		case AMOVB:
 		case ASXTB:	o1 = opbfm(ASBFM, 0, 7, rf, rt); break;
+		case AMOVH:
 		case ASXTH:	o1 = opbfm(ASBFM, 0, 15, rf, rt); break;
+		case AMOVW:
 		case ASXTW:	o1 = opbfm(ASBFM, 0, 31, rf, rt); break;
+		case AMOVBU:
 		case AUXTB:	o1 = opbfm(AUBFM, 0, 7, rf, rt); break;
+		case AMOVHU:
 		case AUXTH:	o1 = opbfm(AUBFM, 0, 15, rf, rt); break;
+		case AMOVWU:	o1 = oprrr(p->as) | (rf<<16) | (REGZERO<<5) | rt; break;
 		case AUXTW:	o1 = opbfm(AUBFM, 0, 31, rf, rt); break;
 		case ASXTBW:	o1 = opbfm(ASBFMW, 0, 7, rf, rt); break;
 		case ASXTHW:	o1 = opbfm(ASBFMW, 0, 15, rf, rt); break;
@@ -857,7 +864,8 @@ oprrr(int a)
 	case AANDW:	return S32 | 0<<29 | 0xA<<24;
 	case AMOV:
 	case AORR:	return S64 | 1<<29 | 0xA<<24;
-	case AMOVW:
+//	case AMOVW:
+	case AMOVWU:
 	case AORRW:	return S32 | 1<<29 | 0xA<<24;
 	case AEOR:	return S64 | 2<<29 | 0xA<<24;
 	case AEORW:	return S32 | 2<<29 | 0xA<<24;

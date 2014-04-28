@@ -112,7 +112,7 @@ Dconv(Fmt *fp)
 		break;
 
 	case D_CONST:
-		if(a->reg == NREG)
+		if(a->reg == NREG || a->reg == REGZERO)
 			sprint(str, "$%N", a);
 		else
 			sprint(str, "$%N(R%d)", a, a->reg);
