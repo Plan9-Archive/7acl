@@ -102,6 +102,9 @@ Optab	optab[] =
 	{ AADD,		C_LCON,	C_NONE,	C_REG,		13, 8, 0,	LFROM },
 	{ ACMP,		C_LCON,	C_REG,	C_NONE,		13, 8, 0,	LFROM },
 
+	{ AAND,		C_LCON,	C_REG,	C_REG,		28, 8, 0,	LFROM },
+	{ AAND,		C_LCON,	C_NONE,	C_REG,		28, 8, 0,	LFROM },
+
 	{ AMUL,		C_REG,	C_REG,	C_REG,		15, 4, 0 },
 	{ AMUL,		C_REG,	C_NONE,	C_REG,		15, 4, 0 },
 	{ AMADD,		C_REG,	C_REG,	C_REG,		15, 4, 0 },
