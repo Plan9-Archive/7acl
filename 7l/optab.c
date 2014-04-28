@@ -7,6 +7,7 @@ Optab	optab[] =
 	{ ATEXT,	C_ADDR,	C_NONE,	C_LCON, 	 0, 0, 0 },
 	{ ATEXT,	C_ADDR,	C_REG,	C_LCON, 	 0, 0, 0 },
 
+	/* arithmetic operations */
 	{ AADD,		C_REG,	C_REG,	C_REG,		 1, 4, 0 },
 	{ AADD,		C_REG,	C_NONE,	C_REG,		 1, 4, 0 },
 	{ AADC,		C_REG,	C_REG,	C_REG,		 1, 4, 0 },
@@ -18,6 +19,10 @@ Optab	optab[] =
 	{ AADD,		C_ADDCON,	C_RSP,	C_RSP,		 2, 4, 0 },
 	{ AADD,		C_ADDCON,	C_NONE,	C_RSP,		 2, 4, 0 },
 	{ ACMP,		C_ADDCON,	C_RSP,	C_NONE,		 2, 4, 0 },
+
+	{ AADD,		C_LCON,	C_REG,	C_REG,		13, 8, 0,	LFROM },
+	{ AADD,		C_LCON,	C_NONE,	C_REG,		13, 8, 0,	LFROM },
+	{ ACMP,		C_LCON,	C_REG,	C_NONE,		13, 8, 0,	LFROM },
 
 	{ AADD,		C_SHIFT,C_REG,	C_REG,		 3, 4, 0 },
 	{ AADD,		C_SHIFT,C_NONE,	C_REG,		 3, 4, 0 },
@@ -31,6 +36,18 @@ Optab	optab[] =
 	{ AADD,		C_EXTREG,C_NONE,	C_RSP,		27, 4, 0 },
 	{ AMVN,		C_EXTREG,C_NONE,	C_RSP,		27, 4, 0 },
 	{ ACMP,		C_EXTREG,C_RSP,	C_NONE,		27, 4, 0 },
+
+	{ AADD,		C_REG,	C_REG,	C_REG,		 1, 4, 0 },
+	{ AADD,		C_REG,	C_NONE,	C_REG,		 1, 4, 0 },
+
+	/* logical operations */
+	{ AAND,		C_REG,	C_REG,	C_REG,		 1, 4, 0 },
+	{ AAND,		C_REG,	C_NONE,	C_REG,		 1, 4, 0 },
+
+	/* TO DO: C_BITCON */
+
+	{ AAND,		C_LCON,	C_REG,	C_REG,		28, 8, 0,	LFROM },
+	{ AAND,		C_LCON,	C_NONE,	C_REG,		28, 8, 0,	LFROM },
 
 	{ AMOV,		C_RSP,	C_NONE,	C_RSP,		24, 4, 0 },
 //	{ AMOVW,		C_REG,	C_NONE,	C_REG,		24, 4, 0 },
@@ -97,13 +114,6 @@ Optab	optab[] =
 	{ AMOVBU,	C_REG,	C_NONE,	C_ADDR,		64, 8, 0,	LTO },
 	{ AMOVW,	C_ADDR,	C_NONE,	C_REG,		65, 8, 0,	LFROM },
 	{ AMOVBU,	C_ADDR,	C_NONE,	C_REG,		65, 8, 0,	LFROM },
-
-	{ AADD,		C_LCON,	C_REG,	C_REG,		13, 8, 0,	LFROM },
-	{ AADD,		C_LCON,	C_NONE,	C_REG,		13, 8, 0,	LFROM },
-	{ ACMP,		C_LCON,	C_REG,	C_NONE,		13, 8, 0,	LFROM },
-
-	{ AAND,		C_LCON,	C_REG,	C_REG,		28, 8, 0,	LFROM },
-	{ AAND,		C_LCON,	C_NONE,	C_REG,		28, 8, 0,	LFROM },
 
 	{ AMUL,		C_REG,	C_REG,	C_REG,		15, 4, 0 },
 	{ AMUL,		C_REG,	C_NONE,	C_REG,		15, 4, 0 },
