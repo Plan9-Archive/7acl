@@ -646,7 +646,7 @@ scon:
 	{
 		if($$ < 0 || $$ >= 64)
 			yyerror("shift value out of range");
-		$$ = $1&0x1F;
+		$$ = $1&0x3F;
 	}
 
 sreg:
