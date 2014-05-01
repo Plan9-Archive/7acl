@@ -113,7 +113,6 @@ TEXT	_msr(SB), $-4
 
 	RETURN
 
-
 TEXT _movwide(SB), $-4
 	// bit of a waste, because MOVZ/MOVN disassemble as MOV */
 	MOVZ	$0x1234, R1
@@ -249,6 +248,81 @@ TEXT	_arithextended(SB), $-4
 	CMP	R3.UXTX<<2, SP
 	CMPW	R3.UXTW, R4
 	CMP	R5.SXTW, R4
+	RETURN
+
+TEXT	_logshifted(SB), $-4
+	/* logical left */
+	AND	R1<<32, R2, R3
+	ANDS R1<<7, R2, R3
+	ANDW	R1<<5, R2, R3
+	ANDSW	R1<<16, R2, R3
+	ORR	R1<<15, R2, R3
+	ORRW	R1<<5, R2, R3
+	ORN	R1<<15, R2, R3
+	ORNW	R1<<5, R2, R3
+	EOR	R1<<17, R2, R3
+	EORW	R1<<7, R2, R3
+	EON	R1<<19, R2, R3
+	EONW	R1<<9, R2, R3
+	BIC	R1<<17, R2, R3
+	BICW	R1<<7, R2, R3
+	BICS	R1<<17, R2, R3
+	BICSW	R1<<7, R2, R3
+
+	/* logical right */
+	AND	R1>>32, R2, R3
+	ANDS R1>>7, R2, R3
+	ANDW	R1>>5, R2, R3
+	ANDSW	R1>>16, R2, R3
+	ORR	R1>>15, R2, R3
+	ORRW	R1>>5, R2, R3
+	ORN	R1>>15, R2, R3
+	ORNW	R1>>5, R2, R3
+	EOR	R1>>17, R2, R3
+	EORW	R1>>7, R2, R3
+	EON	R1>>19, R2, R3
+	EONW	R1>>9, R2, R3
+	BIC	R1>>17, R2, R3
+	BICW	R1>>7, R2, R3
+	BICS	R1>>17, R2, R3
+	BICSW	R1>>7, R2, R3
+
+	/* arithmetic right */
+	AND	R1->32, R2, R3
+	ANDS R1->7, R2, R3
+	ANDW	R1->5, R2, R3
+	ANDSW	R1->16, R2, R3
+	ORR	R1->15, R2, R3
+	ORRW	R1->5, R2, R3
+	ORN	R1->15, R2, R3
+	ORNW	R1->5, R2, R3
+	EOR	R1->17, R2, R3
+	EORW	R1->7, R2, R3
+	EON	R1->19, R2, R3
+	EONW	R1->9, R2, R3
+	BIC	R1->17, R2, R3
+	BICW	R1->7, R2, R3
+	BICS	R1->17, R2, R3
+	BICSW	R1->7, R2, R3
+
+	/* rotate right */
+	AND	R1@>32, R2, R3
+	ANDS R1@>7, R2, R3
+	ANDW	R1@>5, R2, R3
+	ANDSW	R1@>16, R2, R3
+	ORR	R1@>15, R2, R3
+	ORRW	R1@>5, R2, R3
+	ORN	R1@>15, R2, R3
+	ORNW	R1@>5, R2, R3
+	EOR	R1@>17, R2, R3
+	EORW	R1@>7, R2, R3
+	EON	R1@>19, R2, R3
+	EONW	R1@>9, R2, R3
+	BIC	R1@>17, R2, R3
+	BICW	R1@>7, R2, R3
+	BICS	R1@>17, R2, R3
+	BICSW	R1@>7, R2, R3
+
 	RETURN
 
 TEXT _movreg(SB), $-4
