@@ -886,6 +886,17 @@ oprrr(int a)
 	case AANDS:	return S64 | 3<<29 | 0xA<<24;
 	case AANDSW:	return S32 | 3<<29 | 0xA<<24;
 
+	case ABIC:	return S64 | 0<<29 | 0xA<<24 | 1<<21;
+	case ABICW:	return S32 | 0<<29 | 0xA<<24 | 1<<21;
+	case ABICS:	return S64 | 3<<29 | 0xA<<24 | 1<<21;
+	case ABICSW:	return S32 | 3<<29 | 0xA<<24 | 1<<21;
+	case AEON:	return S64 | 2<<29 | 0xA<<24 | 1<<21;
+	case AEONW:	return S32 | 2<<29 | 0xA<<24 | 1<<21;
+	case AMVN:
+	case AORN:	return S64 | 1<<29 | 0xA<<24 | 1<<21;
+	case AMVNW:
+	case AORNW:	return S32 | 1<<29 | 0xA<<24 | 1<<21;
+
 	case AASR:	return S64 | OPDP2(10);	/* also ASRV */
 	case AASRW:	return S32 | OPDP2(10);
 	case ALSL:	return S64 | OPDP2(8);
@@ -894,11 +905,6 @@ oprrr(int a)
 	case ALSRW:	return S32 | OPDP2(9);
 	case AROR:	return S64 | OPDP2(11);
 	case ARORW:	return S32 | OPDP2(11);
-
-	case ABIC:	return S64 | 0<<29 | 0xA<<24 | 1<<21;
-	case ABICW:	return S32 | 0<<29 | 0xA<<24 | 1<<21;
-	case ABICS:	return S64 | 3<<29 | 0xA<<24 | 1<<21;
-	case ABICSW:	return S32 | 3<<29 | 0xA<<24 | 1<<21;
 
 	case ACCMN:	return S64 | 0<<30 | 1<<29 | 0xD2<<21 | 0<<11 | 0<<10 | 0<<4;	/* cond<<12 | nzcv<<0 */
 	case ACCMNW:	return S32 | 0<<30 | 1<<29 | 0xD2<<21 | 0<<11 | 0<<10 | 0<<4;
@@ -932,8 +938,7 @@ oprrr(int a)
 	case ACSNEG:	return S64 | 1<<30 | 0<<29 | 0xD4<<21 | 0<<11 | 1<<10;
 	case ACNEGW:
 	case ACSNEGW:	return S32 | 1<<30 | 0<<29 | 0xD4<<21 | 0<<11 | 1<<10;
-	case AEON:	return S64 | 2<<29 | 0xA<<24 | 1<<21;
-	case AEONW:	return S32 | 2<<29 | 0xA<<24 | 1<<21;
+
 	case AMUL:
 	case AMADD:	return S64 | 0<<29 | 0x1B<<24 | 0<<21 | 0<<15;
 	case AMULW:
@@ -950,11 +955,6 @@ oprrr(int a)
 	case ANEGW:	return S32 | 1<<30 | 0<<29 | 0xB<<24 | 0<<21;
 	case ANEGS:	return S64 | 1<<30 | 1<<29 | 0xB<<24 | 0<<21;
 	case ANEGSW:	return S32 | 1<<30 | 1<<29 | 0xB<<24 | 0<<21;
-
-	case AMVN:
-	case AORN:	return S64 | 1<<29 | 0xA<<24 | 1<<21;
-	case AMVNW:
-	case AORNW:	return S32 | 1<<29 | 0xA<<24 | 1<<21;
 
 	case AREM:
 	case ASDIV:	return S64 | OPDP2(3);

@@ -43,11 +43,20 @@ Optab	optab[] =
 	/* logical operations */
 	{ AAND,		C_REG,	C_REG,	C_REG,		 1, 4, 0 },
 	{ AAND,		C_REG,	C_NONE,	C_REG,		 1, 4, 0 },
+	{ ABIC,		C_REG,	C_REG,	C_REG,		 1, 4, 0 },
+	{ ABIC,		C_REG,	C_NONE,	C_REG,		 1, 4, 0 },
 
 	/* TO DO: C_BITCON */
 
 	{ AAND,		C_LCON,	C_REG,	C_REG,		28, 8, 0,	LFROM },
 	{ AAND,		C_LCON,	C_NONE,	C_REG,		28, 8, 0,	LFROM },
+	{ ABIC,		C_LCON,	C_REG,	C_REG,		28, 8, 0,	LFROM },
+	{ ABIC,		C_LCON,	C_NONE,	C_REG,		28, 8, 0,	LFROM },
+
+	{ AAND,		C_SHIFT,C_REG,	C_REG,		 3, 4, 0 },
+	{ AAND,		C_SHIFT,C_NONE,	C_REG,		 3, 4, 0 },
+	{ ABIC,		C_SHIFT,C_REG,	C_REG,		 3, 4, 0 },
+	{ ABIC,		C_SHIFT,C_NONE,	C_REG,		 3, 4, 0 },
 
 	{ AMOV,		C_RSP,	C_NONE,	C_RSP,		24, 4, 0 },
 //	{ AMOVW,		C_REG,	C_NONE,	C_REG,		24, 4, 0 },
