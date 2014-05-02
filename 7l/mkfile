@@ -4,6 +4,7 @@ TARG=7l
 OFILES=\
 	asm.$O\
 	asmout.$O\
+	bits.$O\
 	list.$O\
 	noop.$O\
 	obj.$O\
