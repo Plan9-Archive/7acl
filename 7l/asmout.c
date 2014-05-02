@@ -74,7 +74,8 @@ asmout(Prog *p, Optab *o)
 {
 	long o1, o2, o3, o4, o5, v;
 	vlong d;
-	int r, s, rf, rt, ra, nzcv, cond, i;
+	int r, s, rf, rt, ra, nzcv, cond, i, as;
+	Mask *mask;
 	static Prog *lastcase;
 
 	o1 = 0;
@@ -663,7 +664,26 @@ asmout(Prog *p, Optab *o)
 		o1 |= (p->from.offset&0x7F)<<5;
 		break;
 
-	case 53:	/* unused */
+	case 53:	/* and/or/eor/bic/... $bimmN, Rn, Rd -> op (N,r,s), Rn, Rd */
+		as = p->as;
+		if(as == AMOV)
+			as = AORR;
+		else if(as == AMOVW)
+			as = AORRW;
+		o1 = opirr(as);
+		s = o1 & S64? 64: 32;
+		mask = findmask(p->from.offset);
+		if(mask != nil){
+			o1 |= ((mask->r&(s-1))<<16) | (((mask->s-1)&(s-1))<<10);
+			if(mask->e == 64 && s == 64)
+				o1 |= 1<<22;
+		}else
+			diag("invalid mask %#llux\n%P", p->from.offset, p);	/* probably shouldn't happen */
+		rt = p->to.reg;
+		r = p->reg;
+		if(r == NREG)
+			r = rt;
+		o1 |= (r<<5) | rt;
 		break;
 
 	case 54:	/* floating point arith */
@@ -992,6 +1012,7 @@ opirr(int a)
 {
 	switch(a){
 
+	/* op $addcon, Rn, Rd */
 	case AMOV:
 	case AADD:	return S64 | 0<<30 | 0<<29 | 0x11<<24;
 	case ACMN:
@@ -1011,15 +1032,15 @@ opirr(int a)
 	case AADR:		return 0<<31 | 0x10<<24;
 	case AADRP:	return 1<<31 | 0x10<<24;
 
-	/* op $imm, Rn, Rd */
-	case AAND:	return S64 | 0<<29 | 0x14<<23;
-	case AANDW:	return S32 | 0<<29 | 0x14<<23 | 0<<22;
-	case AORR:	return S64 | 1<<29 | 0x14<<23;
-	case AORRW:	return S32 | 1<<29 | 0x14<<23 | 0<<22;
-	case AEOR:	return S64 | 2<<29 | 0x14<<23;
-	case AEORW:	return S32 | 2<<29 | 0x14<<23 | 0<<22;
-	case AANDS:	return S64 | 3<<29 | 0x14<<23;
-	case AANDSW:	return S32 | 3<<29 | 0x14<<23 | 0<<22;
+	/* op $bimm, Rn, Rd */
+	case AAND:	return S64 | 0<<29 | 0x24<<23;
+	case AANDW:	return S32 | 0<<29 | 0x24<<23 | 0<<22;
+	case AORR:	return S64 | 1<<29 | 0x24<<23;
+	case AORRW:	return S32 | 1<<29 | 0x24<<23 | 0<<22;
+	case AEOR:	return S64 | 2<<29 | 0x24<<23;
+	case AEORW:	return S32 | 2<<29 | 0x24<<23 | 0<<22;
+	case AANDS:	return S64 | 3<<29 | 0x24<<23;
+	case AANDSW:	return S32 | 3<<29 | 0x24<<23 | 0<<22;
 
 	case AASR:	return S64 | 0<<29 | 0x26<<23;	/* alias of SBFM */
 	case AASRW:	return S32 | 0<<29 | 0x26<<23 | 0<<22;
