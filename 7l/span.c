@@ -301,7 +301,7 @@ isaddcon(vlong v)
 static int
 isbitcon(uvlong v)
 {
-	return findmask(v) != nil;
+	return findmask(v) != nil || (v>>32) == 0 && findmask(v | (v<<32)) != nil;
 }
 
 static long
