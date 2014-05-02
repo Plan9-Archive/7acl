@@ -73,6 +73,7 @@ void
 asmout(Prog *p, Optab *o)
 {
 	long o1, o2, o3, o4, o5, v;
+	ulong u;
 	vlong d;
 	int r, s, rf, rt, ra, nzcv, cond, i, as;
 	Mask *mask;
@@ -680,8 +681,11 @@ asmout(Prog *p, Optab *o)
 			if(s == 64){
 				if(mask->e == 64 && ((uvlong)p->from.offset>>32) != 0)
 					o1 |= 1<<22;
-			}else if((p->from.offset & ~(uvlong)0xFFFFFFFF) != 0)
-				diag("mask needs 64 bits %#llux\n%P", p->from.offset, p);
+			}else{
+				u = (uvlong)p->from.offset >> 32;
+				if(u != 0 && u != 0xFFFFFFFF)
+					diag("mask needs 64 bits %#llux\n%P", p->from.offset, p);
+			}
 		}else
 			diag("invalid mask %#llux\n%P", p->from.offset, p);	/* probably shouldn't happen */
 		rt = p->to.reg;
