@@ -673,10 +673,15 @@ asmout(Prog *p, Optab *o)
 		o1 = opirr(as);
 		s = o1 & S64? 64: 32;
 		mask = findmask(p->from.offset);
+		if(mask == nil)
+			mask = findmask(p->from.offset | (p->from.offset<<32));
 		if(mask != nil){
 			o1 |= ((mask->r&(s-1))<<16) | (((mask->s-1)&(s-1))<<10);
-			if(mask->e == 64 && s == 64)
-				o1 |= 1<<22;
+			if(s == 64){
+				if(mask->e == 64 && ((uvlong)p->from.offset>>32) != 0)
+					o1 |= 1<<22;
+			}else if((p->from.offset & ~(uvlong)0xFFFFFFFF) != 0)
+				diag("mask needs 64 bits %#llux\n%P", p->from.offset, p);
 		}else
 			diag("invalid mask %#llux\n%P", p->from.offset, p);	/* probably shouldn't happen */
 		rt = p->to.reg;
