@@ -298,6 +298,12 @@ isaddcon(vlong v)
 	return v < 0xFFF;
 }
 
+static int
+isbitcon(uvlong v)
+{
+	return findmask(v) != nil;
+}
+
 static long
 pcldr(long v, int rt)
 {
@@ -497,14 +503,25 @@ aclass(Adr *a)
 			v = instoffset;
 			if(v == 0)
 				return C_ZCON;
-			if(isaddcon(v))
+			if(isaddcon(v)){
+				if(isbitcon(v))
+					return C_ABCON;
 				return C_ADDCON;
+			}
 			t = movcon(v);
-			if(t >= 0)
+			if(t >= 0){
+				if(isbitcon(v))
+					return C_MBCON;
 				return C_MOVCON;
+			}
 			t = movcon(~v);
-			if(t >= 0)
+			if(t >= 0){
+				if(isbitcon(v))
+					return C_MBCON;
 				return C_MOVCON;
+			}
+			if(isbitcon(v))
+				return C_BITCON;
 			return C_LCON;
 
 		case D_EXTERN:
@@ -633,12 +650,17 @@ cmp(int a, int b)
 		break;
 
 	case C_ADDCON:
-		if(b == C_ZCON)
+		if(b == C_ZCON || b == C_ABCON)
+			return 1;
+		break;
+
+	case C_BITCON:
+		if(b == C_ABCON || b == C_MBCON)
 			return 1;
 		break;
 
 	case C_LCON:
-		if(b == C_ZCON || b == C_BITCON || b == C_ADDCON || b == C_MOVCON)
+		if(b == C_ZCON || b == C_BITCON || b == C_ADDCON || b == C_ABCON || b == C_MBCON || b == C_MOVCON)
 			return 1;
 		break;
 
@@ -646,7 +668,7 @@ cmp(int a, int b)
 		return cmp(C_LCON, b);
 
 	case C_MOVCON:
-		if(b == C_ADDCON || b == C_ZCON)
+		if(b == C_ADDCON || b == C_ZCON || b == C_MBCON)
 			return 1;
 		break;
 
