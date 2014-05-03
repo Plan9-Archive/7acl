@@ -413,7 +413,7 @@ void	putsymb(char*, int, vlong, int);
 void	readundefs(char*, int);
 long	regoff(Adr*);
 int	relinv(int);
-long	rnd(long, long);
+vlong	rnd(vlong, long);
 void	span(void);
 void	strnput(char*, int);
 void	undef(void);

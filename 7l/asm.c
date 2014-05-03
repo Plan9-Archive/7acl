@@ -490,7 +490,8 @@ datblk(long s, long n, int str)
 	Sym *v;
 	Prog *p;
 	char *cast;
-	long a, l, fl, j, d;
+	long a, l, fl, j;
+	vlong d;
 	int i, c;
 
 	memset(buf.dbuf, 0, n+100);
