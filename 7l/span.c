@@ -7,7 +7,7 @@ static struct {
 
 static void		checkpool(Prog*, int);
 static void 	flushpool(Prog*, int);
-static long	pcldr(long, int);
+static int	ispcdisp(long);
 
 static Optab *badop;
 static Oprang	oprange[ALAST];
@@ -154,7 +154,7 @@ span(void)
 static void
 checkpool(Prog *p, int skip)
 {
-	if(pool.size >= 0xffff0 || pcldr(p->pc+4+pool.size - pool.start+8, 0) == 0)
+	if(pool.size >= 0xffff0 || !ispcdisp(p->pc+4+pool.size - pool.start+8))
 		flushpool(p, skip);
 	else if(p->link == P)
 		flushpool(p, 2);
@@ -275,43 +275,36 @@ regoff(Adr *a)
 	return instoffset;
 }
 
-long
-bitrot(vlong v)
+static int
+ispcdisp(long v)
 {
-	int i;
-
-	for(i=0; i<64; i++) {
-		if((v & ~0xff) == 0)
-			return (i<<8) | v | (1<<25);
-		v = (v<<2) | (v>>30);
-	}
-	return 0;
+	/* pc-relative addressing will reach? */
+	return v >= -0xfffff && v <= 0xfffff && (v&3) == 0;
 }
 
 static int
 isaddcon(vlong v)
 {
+	/* uimm12 or uimm24? */
 	if(v < 0)
 		return 0;
 	if((v & 0xFFF) == 0)
 		v >>= 12;
-	return v < 0xFFF;
+	return v <= 0xFFF;
 }
 
 static int
 isbitcon(uvlong v)
 {
+	/*  fancy bimm32 or bimm64? */
 	return findmask(v) != nil || (v>>32) == 0 && findmask(v | (v<<32)) != nil;
 }
 
-static long
-pcldr(long v, int rt)
-{
-	if(v >= -0xfffff && v <= 0xfffff && (v&3) == 0)
-		return (6<<27) | (((v>>2)&0x7ffff)<<5) | rt;
-	return 0;
-}
-
+/*
+ * internal class codes for different constant classes:
+ * they partition the constant/offset range into disjoint ranges that
+ * are somehow treated specially by one or more load/store instructions.
+ */
 static int	autoclass[] = {C_PSAUTO, C_NSAUTO, C_NPAUTO, C_PSAUTO, C_PPAUTO, C_UAUTO4K, C_UAUTO8K, C_UAUTO16K, C_UAUTO32K, C_UAUTO64K, C_LAUTO};
 static int	oregclass[] = {C_ZOREG, C_NSOREG, C_NPOREG, C_PSOREG, C_PPOREG, C_UOREG4K, C_UOREG8K, C_UOREG16K, C_UOREG32K, C_UOREG64K, C_LOREG};
 static int	sextclass[] = {C_SEXT1, C_LEXT, C_LEXT, C_SEXT1, C_SEXT1, C_SEXT1, C_SEXT2, C_SEXT4, C_SEXT8, C_SEXT16, C_LEXT};
@@ -348,6 +341,11 @@ constclass(vlong l)
 	return 10;
 }
 
+/*
+ * given an offset v and a class c (see above)
+ * return the offset value to use in the instruction,
+ * scaled if necessary
+ */
 vlong
 offsetshift(vlong v, int c)
 {
@@ -368,6 +366,11 @@ offsetshift(vlong v, int c)
 	return vs;
 }
 
+/*
+ * if v contains a single 16-bit value aligned
+ * on a 16-bit field, and thus suitable for movk/movn,
+ * return the field index 0 to 3; otherwise return -1
+ */
 int
 movcon(vlong v)
 {
