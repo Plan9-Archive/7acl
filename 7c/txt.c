@@ -1291,19 +1291,21 @@ sconst(Node *n)
 	return 0;
 }
 
+static int
+isaddcon(vlong v)
+{
+	/* uimm12 or uimm24? */
+	if(v < 0)
+		return 0;
+	if((v & 0xFFF) == 0)
+		v >>= 12;
+	return v <= 0xFFF;
+}
+
 int
 sval(long v)
 {
-	int i;
-
-	for(i=0; i<16; i++) {
-		if((v & ~0xff) == 0)
-			return 1;
-		if((~v & ~0xff) == 0)
-			return 1;
-		v = (v<<2) | ((ulong)v>>30);
-	}
-	return 0;
+	return isaddcon(v) || isaddcon(-v);
 }
 
 long
