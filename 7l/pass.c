@@ -460,8 +460,8 @@ atolwhex(char *s)
 	return n;
 }
 
-long
-rnd(long v, long r)
+vlong
+rnd(vlong v, long r)
 {
 	long c;
 
