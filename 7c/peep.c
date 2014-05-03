@@ -1136,7 +1136,9 @@ a2type(Prog *p)
 	switch(p->as) {
 
 	case ACMP:
+	case ACMPW:
 	case ACMN:
+	case ACMNW:
 
 	case AADD:
 	case AADDW:
