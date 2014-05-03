@@ -571,9 +571,9 @@ constprop(Adr *c1, Adr *v1, Reg *r)
 			return;
 		}
 		if(p->as == AMOVW && copyas(&p->from, c1)) {
-				if(debug['C'])
-					print("; sub%D/%D", &p->from, v1);
-				p->from = *v1;
+			if(debug['C'])
+				print("; sub%D/%D", &p->from, v1);
+			p->from = *v1;
 		} else if(copyu(p, v1, A) > 1) {
 			if(debug['C'])
 				print("; %Dset; return\n", v1);
@@ -683,7 +683,7 @@ shiftprop(Reg *r)
 		o = p->to.reg;
 	switch(p->from.type){
 	case D_CONST:
-		o |= (p->from.offset&0x1f)<<7;
+		o |= (p->from.offset&0x3f)<<7;
 		break;
 	case D_REG:
 		o |= (1<<4) | (p->from.reg<<8);
@@ -743,7 +743,7 @@ findinc(Reg *r, Reg *r2, Adr *v)
 			p = r1->prog;
 			if(p->as == AADD)
 			if(p->from.type == D_CONST)
-			if(p->from.offset > -4096 && p->from.offset < 4096)
+			if(p->from.offset > -256 && p->from.offset < 256)
 				return r1;
 		default:
 			return R;
@@ -929,6 +929,8 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case AMOVBU:
 	case AMOVW:
 	case AMOVWU:
+	case AMOV:
+
 	case ANEG:
 	case ANEGS:
 	case AFCVTSD:
