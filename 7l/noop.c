@@ -165,27 +165,32 @@ noops(void)
 				curtext->mark |= LEAF;
 			}
 
+			aoffset = autosize;
+			if(aoffset > 0xF0)
+				aoffset = 0xF0;
+
 			if(curtext->mark & LEAF) {
 				if(curtext->from.sym)
 					curtext->from.sym->type = SLEAF;
 				if(autosize == 0)
 					break;
+				aoffset = 0;
 			}
 
-			aoffset = autosize;
-			if(aoffset > 0xF0)
-				aoffset = 0xF0;
-
+			q = p;
 			if(autosize > aoffset){
-				q1 = prg();
-				q1->as = ASUB;
-				q1->line = p->line;
-				q1->from.type = D_CONST;
-				q1->from.offset = autosize - aoffset;
-				q1->to.type = D_REG;
-				q1->to.reg = REGSP;
-				q1->link = q->link;
-				q->link = q1;
+				q = prg();
+				q->as = ASUB;
+				q->line = p->line;
+				q->from.type = D_CONST;
+				q->from.offset = autosize - aoffset;
+				q->to.type = D_REG;
+				q->to.reg = REGSP;
+				q->link = p->link;
+				p->link = q;
+
+				if(curtext->mark & LEAF)
+					break;
 			}
 
 			q1 = prg();
@@ -193,12 +198,12 @@ noops(void)
 			q1->line = p->line;
 			q1->from.type = D_REG;
 			q1->from.reg = REGLINK;
-			q1->to.type = D_XPOST;
+			q1->to.type = D_XPRE;
 			q1->to.offset = -aoffset;
 			q1->to.reg = REGSP;
 
-			q1->link = p->link;
-			p->link = q1;
+			q1->link = q->link;
+			q->link = q1;
 			break;
 
 		case ARETURN:
@@ -206,55 +211,53 @@ noops(void)
 			if(p->from.type == D_CONST)
 				goto become;
 			if(curtext->mark & LEAF) {
-				if(autosize == 0) {
-					p->as = ARET;
-					p->from = zprg.from;
-					p->to.type = D_OREG;
-					p->to.offset = 0;
-					p->to.reg = REGLINK;
-					break;
+				if(autosize != 0){
+					p->as = AADD;
+					p->from.type = D_CONST;
+					p->from.offset = autosize;
+					p->to.type = D_REG;
+					p->to.reg = REGSP;
 				}
-
-				p->as = AADD;
-				p->from.type = D_CONST;
-				p->from.offset = autosize;
-				p->to.type = D_REG;
-				p->to.reg = REGSP;
 			}else{
 				/* want write-back pre-indexed SP+autosize -> SP, loading REGLINK*/
 				aoffset = autosize;
 				if(aoffset > 0xF0)
 					aoffset = 0xF0;
-				if(autosize > aoffset){
-					p->as = AADD;
-					p->from.type = D_CONST;
-					p->from.offset = autosize - aoffset;
-					p->to.type = D_REG;
-					p->to.reg = REGSP;
-
-					q = prg();
-					q->link = p->link;
-					p->link = q;
-					p = q;
-				}
 
 				p->as = AMOV;
-				p->from.type = D_XPRE;
+				p->from.type = D_XPOST;
 				p->from.offset = aoffset;
 				p->from.reg = REGSP;
 				p->to.type = D_REG;
 				p->to.reg = REGLINK;
+
+				if(autosize > aoffset) {
+					q = prg();
+					q->as = AADD;
+					q->from.type = D_CONST;
+					q->from.offset = autosize - aoffset;
+					q->to.type = D_REG;
+					q->to.reg = REGSP;
+
+					q->link = p->link;
+					p->link = q;
+					p = q;
+				}
 			}
 
-			q = prg();
-			q->as = ARET;
-			q->line = p->line;
-			q->to.type = D_OREG;
-			q->to.offset = 0;
-			q->to.reg = REGLINK;
+			if(p->as != ARETURN) {
+				q = prg();
+				q->line = p->line;
+				q->link = p->link;
+				p->link = q;
+				p = q;
+			}
 
-			q->link = p->link;
-			p->link = q;
+			p->as = ARET;
+			p->line = p->line;
+			p->to.type = D_OREG;
+			p->to.offset = 0;
+			p->to.reg = REGLINK;
 
 			break;
 
