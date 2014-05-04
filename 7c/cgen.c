@@ -373,7 +373,7 @@ cgenrel(Node *n, Node *nn, int inrel)
 		r = l;
 		while(r->op == OADD)
 			r = r->right;
-		if(sconst(r) && (v = r->vconst+nod.xoffset) > -4096 && v < 4096) {
+		if(sconst(r) && (v = r->vconst+nod.xoffset) >= -4096 && v < 4096) {
 			v = r->vconst;
 			r->vconst = 0;
 			cgen(l, &nod);
@@ -582,7 +582,7 @@ reglcgen(Node *t, Node *n, Node *nn)
 		r = n->left;
 		while(r->op == OADD)
 			r = r->right;
-		if(sconst(r) && (v = r->vconst+t->xoffset) > -4096 && v < 4096) {
+		if(sconst(r) && (v = r->vconst+t->xoffset) >= -4096 && v < 4096) {
 			v = r->vconst;
 			r->vconst = 0;
 			lcgen(n, t);
@@ -592,7 +592,7 @@ reglcgen(Node *t, Node *n, Node *nn)
 			return;
 		}
 	} else if(n->op == OINDREG) {
-		if((v = n->xoffset) > -4096 && v < 4096) {
+		if((v = n->xoffset) >= -4096 && v < 4096) {
 			n->op = OREGISTER;
 			cgen(n, t);
 			t->xoffset += v;
