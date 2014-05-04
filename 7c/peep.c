@@ -45,7 +45,8 @@ loop1:
 	t = 0;
 	for(r=firstr; r!=R; r=r->link) {
 		p = r->prog;
-		if(p->as == ALSL || p->as == ALSR || p->as == AASR) {
+		if(p->as == ALSL || p->as == ALSR || p->as == AASR ||
+		   p->as == ALSLW || p->as == ALSRW || p->as == AASRW) {
 			/*
 			 * elide shift into D_SHIFT operand of subsequent instruction
 			 */
@@ -270,6 +271,7 @@ uniqs(Reg *r)
 int
 regzer(Adr *a)
 {
+return 0;
 	switch(a->type){
 	case D_CONST:
 		return a->sym == S && a->offset == 0;
@@ -992,8 +994,17 @@ copyu(Prog *p, Adr *v, Adr *s)
 
 	case AADD:	/* read, read, write */
 	case AADDW:
+	case AADDS:
+	case AADDSW:
 	case ASUB:
 	case ASUBW:
+	case ASUBS:
+	case ASUBSW:
+		if(0 && p->from.type == D_CONST){
+			if(s != A && regzer(s))
+				return 4;	/* add/sub $c,r,r -> r31 is sp not zr, don't touch */
+		}
+
 	case ALSL:
 	case ALSLW:
 	case ALSR:
@@ -1142,7 +1153,11 @@ a2type(Prog *p)
 
 	case AADD:
 	case AADDW:
+	case AADDS:
+	case AADDSW:
 	case ASUB:
+	case ASUBS:
+	case ASUBSW:
 	case ASUBW:
 	case ALSL:
 	case ALSLW:
@@ -1156,6 +1171,8 @@ a2type(Prog *p)
 	case AORRW:
 	case AAND:
 	case AANDW:
+	case AANDS:
+	case AANDSW:
 	case AEOR:
 	case AEORW:
 	case AMUL:
