@@ -116,7 +116,7 @@ asmout(Prog *p, Optab *o)
 		r = p->reg;
 		if(r == NREG)
 			r = rt;
-		v = p->from.offset;
+		v = regoff(&p->from);
 		if((v & 0xFFF000) != 0){
 			v >>= 12;
 			o1 |= 1<<22;
@@ -144,7 +144,7 @@ asmout(Prog *p, Optab *o)
 		r = o->param;
 		if(r == 0)
 			r = REGZERO;
-		v = p->from.offset;
+		v = regoff(&p->from);
 		if((v & 0xFFF000) != 0){
 			v >>= 12;
 			o1 |= 1<<22;	/* shift, by 12 */
@@ -614,7 +614,10 @@ asmout(Prog *p, Optab *o)
 	case 45:	/* sxt/uxt[bhw] R,R; movT R,R -> sxtT R,R */
 		rf = p->from.reg;
 		rt = p->to.reg;
-		switch(p->as){
+		as = p->as;
+		if(rf == REGZERO)
+			as = AMOVWU;	/* clearer in disassembly */
+		switch(as){
 		case AMOVB:
 		case ASXTB:	o1 = opbfm(ASBFM, 0, 7, rf, rt); break;
 		case AMOVH:
@@ -625,13 +628,13 @@ asmout(Prog *p, Optab *o)
 		case AUXTB:	o1 = opbfm(AUBFM, 0, 7, rf, rt); break;
 		case AMOVHU:
 		case AUXTH:	o1 = opbfm(AUBFM, 0, 15, rf, rt); break;
-		case AMOVWU:	o1 = oprrr(p->as) | (rf<<16) | (REGZERO<<5) | rt; break;
+		case AMOVWU:	o1 = oprrr(as) | (rf<<16) | (REGZERO<<5) | rt; break;
 		case AUXTW:	o1 = opbfm(AUBFM, 0, 31, rf, rt); break;
 		case ASXTBW:	o1 = opbfm(ASBFMW, 0, 7, rf, rt); break;
 		case ASXTHW:	o1 = opbfm(ASBFMW, 0, 15, rf, rt); break;
 		case AUXTBW:	o1 = opbfm(AUBFMW, 0, 7, rf, rt); break;
 		case AUXTHW:	o1 = opbfm(AUBFMW, 0, 15, rf, rt); break;
-		default:	diag("bad sxt %A", p->as); break;
+		default:	diag("bad sxt %A", as); break;
 		}
 		break;
 
@@ -667,10 +670,17 @@ asmout(Prog *p, Optab *o)
 
 	case 53:	/* and/or/eor/bic/... $bimmN, Rn, Rd -> op (N,r,s), Rn, Rd */
 		as = p->as;
-		if(as == AMOV)
+		rt = p->to.reg;
+		r = p->reg;
+		if(r == NREG)
+			r = rt;
+		if(as == AMOV){
 			as = AORR;
-		else if(as == AMOVW)
+			r = REGZERO;
+		}else if(as == AMOVW){
 			as = AORRW;
+			r = REGZERO;
+		}
 		o1 = opirr(as);
 		s = o1 & S64? 64: 32;
 		mask = findmask(p->from.offset);
@@ -688,10 +698,6 @@ asmout(Prog *p, Optab *o)
 			}
 		}else
 			diag("invalid mask %#llux\n%P", p->from.offset, p);	/* probably shouldn't happen */
-		rt = p->to.reg;
-		r = p->reg;
-		if(r == NREG)
-			r = rt;
 		o1 |= (r<<5) | rt;
 		break;
 
@@ -1448,10 +1454,11 @@ omovlit(int as, Prog *p, Adr *a, int dr)
 
 	if(p->cond == nil){	/* not in literal pool */
 		aclass(a);
+fprint(2, "omovlit add\n");
 		/* TO DO: could be clever, and use general constant builder */
 		o1 = oprrr(AADD);
 		v = instoffset;
-		if((v & 0xFFF000) != 0){
+		if(v != 0 && (v & 0xFFF) == 0){
 			v >>= 12;
 			o1 |= 1<<22;	/* shift, by 12 */
 		}
