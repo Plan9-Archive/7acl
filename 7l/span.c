@@ -671,7 +671,7 @@ cmp(int a, int b)
 		return cmp(C_LCON, b);
 
 	case C_MOVCON:
-		if(b == C_ADDCON || b == C_ZCON || b == C_MBCON)
+		if(b == C_MBCON || cmp(C_ADDCON,b))
 			return 1;
 		break;
 
