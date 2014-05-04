@@ -220,6 +220,11 @@ garg1(Node *n, Node *tn1, Node *tn2, int f, Node **fnxp)
 			cgen(n, tn1);
 		return;
 	}
+	if(vconst(n) == 0) {
+		regaalloc(tn2, n);
+		gopcode(OAS, n, Z, tn2);
+		return;
+	}
 	regalloc(tn1, n, Z);
 	if(n->complex >= FNX) {
 		cgen(*fnxp, tn1);
@@ -337,7 +342,7 @@ regalloc(Node *n, Node *tn, Node *o)
 			if(i >= NREG && i < NREG+NFREG)
 				goto out;
 		}
-		j = 0*2 + NREG;
+		j = lasti + NREG;
 		for(i=NREG; i<NREG+NFREG; i++) {
 			if(j >= NREG+NFREG)
 				j = NREG;
@@ -817,10 +822,12 @@ gmove(Node *f, Node *t)
 			gins(ASCVTFWS, &nod, t);
 			regfree(&nod);
 			return;
-		case TUINT:
 		case TINT:
-		case TULONG:
+		case TUINT:
 		case TLONG:
+		case TULONG:
+		case TVLONG:
+		case TUVLONG:
 		case TIND:
 			a = AMOVH;
 			break;
@@ -828,7 +835,7 @@ gmove(Node *f, Node *t)
 		case TUSHORT:
 		case TCHAR:
 		case TUCHAR:
-			a = AMOVW;
+			a = AMOV;
 			break;
 		}
 		break;
@@ -850,6 +857,8 @@ gmove(Node *f, Node *t)
 		case TUINT:
 		case TLONG:
 		case TULONG:
+		case TVLONG:
+		case TUVLONG:
 		case TIND:
 			a = AMOVHU;
 			break;
@@ -857,7 +866,7 @@ gmove(Node *f, Node *t)
 		case TUSHORT:
 		case TCHAR:
 		case TUCHAR:
-			a = AMOVW;
+			a = AMOV;
 			break;
 		}
 		break;
@@ -882,6 +891,8 @@ gmove(Node *f, Node *t)
 		case TIND:
 		case TSHORT:
 		case TUSHORT:
+		case TVLONG:
+		case TUVLONG:
 			a = AMOVB;
 			break;
 		case TCHAR:
@@ -911,6 +922,8 @@ gmove(Node *f, Node *t)
 		case TIND:
 		case TSHORT:
 		case TUSHORT:
+		case TVLONG:
+		case TUVLONG:
 			a = AMOVBU;
 			break;
 		case TCHAR:
