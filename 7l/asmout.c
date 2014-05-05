@@ -56,6 +56,8 @@ static long	opldrpp(int);
 static long	opload(int);
 static long	opstore(int);
 static long	omovlit(int, Prog*, Adr*, int);
+static int	movesize(int);
+static long	oaddi(long, long, int, int);
 
 /*
  * valid pstate field values, and value to use in instruction
@@ -72,7 +74,7 @@ D_DAIFClr,	(3<<16) | (4<<12) | (7<<5),
 void
 asmout(Prog *p, Optab *o)
 {
-	long o1, o2, o3, o4, o5, v;
+	long o1, o2, o3, o4, o5, v, hi;
 	ulong u;
 	vlong d;
 	int r, s, rf, rt, ra, nzcv, cond, i, as;
@@ -117,11 +119,7 @@ asmout(Prog *p, Optab *o)
 		if(r == NREG)
 			r = rt;
 		v = regoff(&p->from);
-		if((v & 0xFFF000) != 0){
-			v >>= 12;
-			o1 |= 1<<22;
-		}
-		o1 |= ((v& 0xFFF) << 10) | (r<<5) | rt;
+		o1 = oaddi(o1, v, r, rt);
 		break;
 
 	case 3:		/* op R<<n[,R],R (shifted register) */
@@ -439,23 +437,42 @@ asmout(Prog *p, Optab *o)
 		break;
 
 	case 30:	/* movT R,L(R) -> strT */
-		o1 = omovlit(AMOVW, p, &p->to, REGTMP);
-		if(!o1)
-			break;
+		s = movesize(o->as);
+		if(s < 0)
+			diag("unexpected long move, op %A tab %A\n%P", p->as, o->as, p);
+		v = regoff(&p->to);
+		if(v < 0)
+			diag("negative large offset\n%P", p);
+		if((v & ((1<<s)-1)) != 0)
+			diag("misaligned offset\n%P", p);
+		hi = v - (v & (0xFFF<<s));
+		if((hi & 0xFFF) != 0)
+			diag("internal: miscalculated offset %ld [%d]\n%P", v, s, p);
+		//fprint(2, "v=%ld (%#lux) s=%d hi=%ld (%#lux) v'=%ld (%#lux)\n", v, v, s, hi, hi, ((v-hi)>>s)&0xFFF, ((v-hi)>>s)&0xFFF);
 		r = p->to.reg;
 		if(r == NREG)
 			r = o->param;
-		o2 = olsxrr(p->as, REGTMP,r, p->from.reg);
+		o1 = oaddi(opirr(AADD), hi, r, REGTMP);
+		o2 = olsr12u(opstr12(p->as), ((v-hi)>>s)&0xFFF, REGTMP, p->from.reg);
 		break;
 
 	case 31:	/* movT L(R), R -> ldrT */
-		o1 = omovlit(AMOVW, p, &p->from, REGTMP);
-		if(!o1)
-			break;
-		r = p->from.reg;
+		s = movesize(o->as);
+		if(s < 0)
+			diag("unexpected long move, op %A tab %A\n%P", p->as, o->as, p);
+		v = regoff(&p->to);
+		if(v < 0)
+			diag("negative large offset\n%P", p);
+		if((v & ((1<<s)-1)) != 0)
+			diag("misaligned offset\n%P", p);
+		hi = v - (v & (0xFFF<<s));
+		if((hi & 0xFFF) != 0)
+			diag("internal: miscalculated offset %ld [%d]\n%P", v, s, p);
+		r = p->to.reg;
 		if(r == NREG)
 			r = o->param;
-		o2 = olsxrr(p->as, REGTMP,r, p->to.reg);
+		o1 = oaddi(opirr(AADD), hi, r, REGTMP);
+		o2 = olsr12u(opldr12(p->as), (v>>s)&0xFFF, REGTMP, p->from.reg);
 		break;
 
 	case 32:	/* mov $con, R -> movz/movn */
@@ -644,6 +661,26 @@ asmout(Prog *p, Optab *o)
 		o1 |= p->to.reg;
 		break;
 
+	case 47:	/* movT R,V(R) -> strT (huge offset) */
+		o1 = omovlit(AMOVW, p, &p->to, REGTMP);
+		if(!o1)
+			break;
+		r = p->to.reg;
+		if(r == NREG)
+			r = o->param;
+		o2 = olsxrr(p->as, REGTMP,r, p->from.reg);
+		break;
+
+	case 48:	/* movT V(R), R -> ldrT (huge offset) */
+		o1 = omovlit(AMOVW, p, &p->from, REGTMP);
+		if(!o1)
+			break;
+		r = p->from.reg;
+		if(r == NREG)
+			r = o->param;
+		o2 = olsxrr(p->as, REGTMP,r, p->to.reg);
+		break;
+
 	case 50:	/* sys/sysl */
 		o1 = opirr(p->as);
 		if((p->from.offset & ~SYSARG4(0x7, 0xF, 0xF, 0x7)) != 0)
@@ -790,7 +827,7 @@ asmout(Prog *p, Optab *o)
 	case 62:	/* case Rv, Rt -> adr tab, Rt; movw Rt[R<<2], Rl; add Rt, Rl; br (Rl) */
 		o1 = ADR(0, 4*4, p->to.reg);	/* adr 4(pc), Rt */
 		o2 = (2<<30)|(7<<27)|(2<<22)|(1<<21)|(3<<13)|(1<<12)|(2<<10)|(p->from.reg<<16)|(p->to.reg<<5)|REGTMP;	/* movw Rt[Rv<<2], REGTMP */
-		o3 = (0x91<<24) | (p->to.reg<<5) | REGTMP;	/* add Rt, REGTMP */
+		o3 = oprrr(AADD) | (p->to.reg<<16) | (REGTMP<<5) | REGTMP;	/* add Rt, REGTMP */
 		o4 = (0x6b<<25)|(0x1F<<16)|(REGTMP<<5);	/* br (REGTMP) */
 		lastcase = p;
 		break;
@@ -1443,6 +1480,17 @@ olsxrr(int, int, int, int)
 	return -1;
 }
 
+static long
+oaddi(long o1, long v, int r, int rt)
+{
+	if((v & 0xFFF000) != 0){
+		v >>= 12;
+		o1 |= 1<<22;
+	}
+	o1 |= ((v & 0xFFF) << 10) | (r<<5) | rt;
+	return o1;
+}
+
 /*
  * load a a literal value into dr
  */
@@ -1454,9 +1502,9 @@ omovlit(int as, Prog *p, Adr *a, int dr)
 
 	if(p->cond == nil){	/* not in literal pool */
 		aclass(a);
-fprint(2, "omovlit add\n");
+fprint(2, "omovlit add %lld (%#llux)\n", instoffset, instoffset);
 		/* TO DO: could be clever, and use general constant builder */
-		o1 = oprrr(AADD);
+		o1 = opirr(AADD);
 		v = instoffset;
 		if(v != 0 && (v & 0xFFF) == 0){
 			v >>= 12;
@@ -1582,6 +1630,33 @@ opfprrr(int a)
 	}
 	diag("bad fp rrr %A\n%P", a, curp);
 	return 0;
+}
+
+/*
+ * size in log2(bytes)
+ */
+static int
+movesize(int a)
+{
+	switch(a){
+	case AMOV:
+		return 3;
+	case AMOVW:
+	case AMOVWU:
+		return 2;
+	case AMOVH:
+	case AMOVHU:
+		return 1;
+	case AMOVB:
+	case AMOVBU:
+		return 0;
+	case AFMOVS:
+		return 2;
+	case AFMOVD:
+		return 3;
+	default:
+		return -1;
+	}
 }
 
 /*
