@@ -23,7 +23,7 @@
 %token	<lval>	LTYPER LTYPES LTYPET LTYPEU LTYPEV LTYPEW LTYPEX LTYPEY LTYPEZ
 %token	<lval>	LMOVK LDMB LSTXR
 %token	<lval>	LCONST LSP LSB LFP LPC
-%token	<lval>	LR LREG LF LFREG LV LVREG LC LCREG LFCR
+%token	<lval>	LR LREG LF LFREG LV LVREG LC LCREG LFCR LFCSEL
 %token	<lval>	LCOND LS LAT LEXT LSPR LSPREG LVTYPE
 %token	<dval>	LFCONST
 %token	<sval>	LSCONST
@@ -321,6 +321,13 @@ inst:
 |	LTYPE9 freg ',' freg ', ' freg ',' freg comma
 	{
 		outcode4($1, &$2, $4.reg, &$6, &$8);
+	}
+/*
+ * FCSEL
+ */
+|	LFCSEL cond ',' freg ',' freg ',' freg
+	{
+		outcode4($1, &$2, $6.reg, &$4, &$8);
 	}
 /*
  * SIMD
