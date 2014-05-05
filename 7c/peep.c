@@ -96,12 +96,25 @@ loop1:
 		default:
 			continue;
 		case AEOR:
-		case AEORW:
 			/*
 			 * EOR -1,x,y => MVN x,y
 			 */
 			if(p->from.type == D_CONST && p->from.offset == -1) {
-				p->as = p->as == AEOR? AMVN: AMVNW;
+				p->as = AMVN;
+				p->from.type = D_REG;
+				if(p->reg != NREG)
+					p->from.reg = p->reg;
+				else
+					p->from.reg = p->to.reg;
+				p->reg = NREG;
+			}
+			continue;
+		case AEORW:
+			/*
+			 * EOR -1,x,y => MVN x,y
+			 */
+			if(p->from.type == D_CONST && (p->from.offset&0xFFFFFFFF)==0xFFFFFFFF){
+				p->as = AMVNW;
 				p->from.type = D_REG;
 				if(p->reg != NREG)
 					p->from.reg = p->reg;
