@@ -1195,10 +1195,14 @@ a2type(Prog *p)
 	case AMUL:
 	case AMULW:
 	case AUMULL:
+	case AREM:
+	case AREMW:
 	case ASDIV:
 	case ASDIVW:
 	case AUDIV:
 	case AUDIVW:
+	case AUREM:
+	case AUREMW:
 		return D_REG;
 
 	case AFCMPS:
