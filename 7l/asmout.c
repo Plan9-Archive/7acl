@@ -1612,8 +1612,8 @@ opfprrr(int a)
 	case AFADDD:	return FPOP2S(0, 0, 1, 2);
 	case AFSUBS:	return FPOP2S(0, 0, 0, 3);
 	case AFSUBD:	return FPOP2S(0, 0, 1, 3);
-	case AFMULS:	return FPOP2S(0, 0, 0, 1);
-	case AFMULD:	return FPOP2S(0, 0, 1, 1);
+	case AFMULS:	return FPOP2S(0, 0, 0, 0);
+	case AFMULD:	return FPOP2S(0, 0, 1, 0);
 	case AFDIVS:	return FPOP2S(0, 0, 0, 1);
 	case AFDIVD:	return FPOP2S(0, 0, 1, 1);
 
