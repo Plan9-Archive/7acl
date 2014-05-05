@@ -363,6 +363,8 @@ subprop(Reg *r0)
 		case AMUL:
 		case ASDIV:
 		case AUDIV:
+		case AREM:
+		case AUREM:
 
 		case ACMPW:
 		case ACMNW:
@@ -382,6 +384,8 @@ subprop(Reg *r0)
 		case AMULW:
 		case ASDIVW:
 		case AUDIVW:
+		case AREMW:
+		case AUREMW:
 
 		case AFCMPS:
 		case AFCMPD:
