@@ -166,9 +166,9 @@ cgenrel(Node *n, Node *nn, int inrel)
 				patch(p1, pc);
 				gopcode(OASHR, nodconst(t), Z, nn);
 			} else {
-				gopcode(OSUB, nn, nodconst(0), nn);
+				gopcode(ONEG, nn, Z, nn);
 				gopcode(OAND, nodconst((1<<t)-1), Z, nn);
-				gopcode(OSUB, nn, nodconst(0), nn);
+				gopcode(ONEG, nn, Z, nn);
 				gbranch(OGOTO);
 				patch(p1, pc);
 				p1 = p;

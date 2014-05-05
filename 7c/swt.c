@@ -226,7 +226,7 @@ loop:
 		regfree(&nod2);
 		if(vs < 0) {
 			gopcode(OAS, &nod1, Z, &nod1);
-			gopcode(OSUB, &nod1, nodconst(0), nn);
+			gopcode(ONEG, &nod1, Z, nn);
 		} else 
 			gopcode(OAS, &nod1, Z, nn);
 		regfree(&nod1);
