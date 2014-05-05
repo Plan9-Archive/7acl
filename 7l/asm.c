@@ -48,6 +48,10 @@ asmb(void)
 			curtext = p;
 			autosize = p->to.offset + PCSZ;
 		}
+		if(p->as == ADWORD && (pc & 7) != 0) {
+			lputl(0);
+			pc += 4;
+		}
 		if(p->pc != pc) {
 			diag("phase error %llux sb %llux",
 				p->pc, pc);
