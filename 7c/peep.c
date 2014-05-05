@@ -952,6 +952,12 @@ copyu(Prog *p, Adr *v, Adr *s)
 
 	case ANEG:
 	case ANEGS:
+	case ANEGW:
+	case ANEGSW:
+	case ANGC:
+	case ANGCS:
+	case ANGCW:
+	case ANGCSW:
 	case AFCVTSD:
 	case AFCVTDS:
 	case AFCVTZSD:
@@ -1037,10 +1043,14 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case AMUL:
 	case AMULW:
 	case AUMULL:
+	case AREM:
+	case AREMW:
 	case ASDIV:
 	case ASDIVW:
 	case AUDIV:
 	case AUDIVW:
+	case AUREM:
+	case AUREMW:
 	case AFADDS:
 	case AFADDD:
 	case AFSUBS:
