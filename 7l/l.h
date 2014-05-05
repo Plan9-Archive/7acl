@@ -224,7 +224,6 @@ enum
 	SYNC		= 1<<6,
 	NOSCHED		= 1<<7,
 
-	BIG		= (1<<12)-4,
 	STRINGSZ	= 200,
 	NHASH		= 10007,
 	NHUNK		= 100000,
