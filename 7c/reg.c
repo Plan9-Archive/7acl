@@ -1115,7 +1115,7 @@ addreg(Adr *a, int rn)
  *	0	R9
  *	1	R10
  *	...	...
- *	7	R15
+ *	6	R15
  */
 long
 RtoB(int r)
@@ -1128,7 +1128,7 @@ RtoB(int r)
 int
 BtoR(long b)
 {
-	b &= 0x0ffL;
+	b &= 0x07fL;
 	if(b == 0)
 		return 0;
 	return bitno(b) + REGMIN;
@@ -1153,7 +1153,7 @@ int
 BtoF(long b)
 {
 
-	b &= 0x7fc00000L;
+	b &= 0x3fc00000L;
 	if(b == 0)
 		return 0;
 	return bitno(b) - 22 + FREGMIN;
