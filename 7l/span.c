@@ -29,6 +29,8 @@ span(void)
 	c = INITTEXT;
 	otxt = c;
 	for(p = firstp; p != P; p = p->link) {
+		if(p->as == ADWORD && (c&7) != 0)
+			c += 4;
 		p->pc = c;
 		o = oplook(p);
 		m = o->size;
@@ -74,6 +76,8 @@ span(void)
 		bflag = 0;
 		c = INITTEXT;
 		for(p = firstp; p != P; p = p->link) {
+			if(p->as == ADWORD && (c&7) != 0)
+				c += 4;
 			p->pc = c;
 			o = oplook(p);
 /* very large branches
@@ -194,14 +198,17 @@ void
 addpool(Prog *p, Adr *a)
 {
 	Prog *q, t;
-	int c;
+	int c, sz;
 
 	c = aclass(a);
 
 	t = zprg;
-	t.as = AWORD;	/* TO DO: DWORD */
-	if(p->as == AMOV)
+	t.as = AWORD;
+	sz = 4;
+	if(p->as == AMOV) {
 		t.as = ADWORD;
+		sz = 8;
+	}
 
 	switch(c) {
 	default:
@@ -230,6 +237,7 @@ addpool(Prog *p, Adr *a)
 	case C_LOREG:
 		t.to.type = D_CONST;
 		t.to.offset = instoffset;
+		sz = 4;
 		break;
 	}
 
@@ -249,7 +257,8 @@ addpool(Prog *p, Adr *a)
 	} else
 		elitrl->link = q;
 	elitrl = q;
-	pool.size += 4;
+	pool.size = rnd(pool.size, sz);
+	pool.size += sz;
 
 	p->cond = q;
 }
@@ -549,8 +558,8 @@ aclass(Adr *a)
 				return C_LCON;
 			}
 			if(!dlm) {
-				instoffset = s->value + a->offset - BIG;
-				if(isaddcon(instoffset))
+				instoffset = s->value + a->offset;
+				if(instoffset != 0 && isaddcon(instoffset))
 					return C_AECON;
 			}
 			instoffset = s->value + a->offset + INITDAT;
