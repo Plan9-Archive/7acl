@@ -222,14 +222,17 @@ asmout(Prog *p, Optab *o)
 		o1 = omovlit(p->as, p, &p->from, p->to.reg);
 		break;
 
-	case 13:	/* addop $lcon, [R], R (64 bit literal) */
+	case 13:	/* addop $lcon, [R], R (64 bit literal); cmp $lcon,R -> addop $lcon,R, ZR */
 		o1 = omovlit(AMOV, p, &p->from, REGTMP);
 		if(!o1)
 			break;
+		rt = p->to.reg;
+		if(p->to.type == D_NONE)
+			rt = REGZERO;
 		r = p->reg;
 		if(r == NREG)
-			r = p->to.reg;
-		if(p->to.reg == REGSP || r == REGSP){
+			r = rt;
+		if(p->to.type != D_NONE && (p->to.reg == REGSP || r == REGSP)){
 			o2 = opxrrr(p->as);
 			o2 |= REGTMP<<16;
 			o2 |= LSL0_64;
@@ -238,7 +241,7 @@ asmout(Prog *p, Optab *o)
 			o2 |= REGTMP << 16;	/* shift is 0 */
 		}
 		o2 |= r << 5;
-		o2 |= p->to.reg;
+		o2 |= rt;
 		break;
 
 	case 14:	/* word */
@@ -1523,7 +1526,10 @@ fprint(2, "omovlit add %lld (%#llux)\n", instoffset, instoffset);
 			w = 1;	/* 64 bit simd&fp */
 			break;
 		case AMOV:
-			w = 1;	/* 64 bit */
+			if(p->cond->as == ADWORD)
+				w = 1;	/* 64 bit */
+			else if(p->cond->to.offset < 0)
+				w = 2;	/* sign extend */
 			break;
 		case AMOVB:
 		case AMOVH:
