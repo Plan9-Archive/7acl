@@ -95,8 +95,8 @@ xcom(Node *n)
 		}
 		break;
 
-	case OASLMUL:
 	case OASMUL:
+	case OASLMUL:
 		xcom(l);
 		xcom(r);
 		t = vlog(r);
@@ -126,6 +126,7 @@ xcom(Node *n)
 			l = n->left;
 			r->vconst = t;
 			r->type = types[TINT];
+			simplifyshift(n);
 		}
 		break;
 
@@ -148,6 +149,7 @@ xcom(Node *n)
 			n->op = OLSHR;
 			r->vconst = t;
 			r->type = types[TINT];
+			simplifyshift(n);
 		}
 		break;
 
@@ -169,6 +171,14 @@ xcom(Node *n)
 			n->op = OAND;
 			r->vconst--;
 		}
+		break;
+
+	case OLSHR:
+	case OASHL:
+	case OASHR:
+		xcom(l);
+		xcom(r);
+		simplifyshift(n);
 		break;
 
 	default:
@@ -201,12 +211,30 @@ xcom(Node *n)
 		n->complex = FNX;
 		break;
 
+	case OEQ:
+	case ONE:
+	case OLE:
+	case OLT:
+	case OGE:
+	case OGT:
+	case OHI:
+	case OHS:
+	case OLO:
+	case OLS:
+		/*
+		 * immediate operators, make const on right
+		 */
+		if(l->op == OCONST) {
+			n->left = r;
+			n->right = l;
+			n->op = invrel[relindex(n->op)];
+		}
+		break;
+
 	case OADD:
 	case OXOR:
 	case OAND:
 	case OOR:
-	case OEQ:
-	case ONE:
 		/*
 		 * immediate operators, make const on right
 		 */
