@@ -287,18 +287,6 @@ regret(Node *n, Node *nn)
 	reg[r]++;
 }
 
-int
-tmpreg(void)
-{
-	int i;
-
-	for(i=REGRET+1; i<NREG; i++)
-		if(reg[i] == 0)
-			return i;
-	diag(Z, "out of fixed registers");
-	return 0;
-}
-
 void
 regalloc(Node *n, Node *tn, Node *o)
 {
@@ -999,10 +987,13 @@ gopcode(int o, Node *f1, Node *f2, Node *t)
 
 	et = TLONG;
 	if(f1 != Z && f1->type != T) {
-		if(f1->op == OCONST && t != Z && t->type != T)
-			et = t->type->etype;
-		else
-			et = f1->type->etype;
+		et = f1->type->etype;
+		if(f1->op == OCONST){
+			if(t != Z && t->type != T)
+				et = t->type->etype;
+			else if(f2 != Z && f2->type != T && ewidth[f2->type->etype] > ewidth[et])
+				et = f2->type->etype;
+		}
 	}
 	true = o & BTRUE;
 	o &= ~BTRUE;
@@ -1128,6 +1119,12 @@ gopcode(int o, Node *f1, Node *f2, Node *t)
 		a = AUDIVW;
 		if(isv(et))
 			a = AUDIV;
+		break;
+
+	case OCOM:
+		a = AMVNW;
+		if(isv(et))
+			a = AMVN;
 		break;
 
 	case ONEG:
@@ -1321,6 +1318,21 @@ int
 sval(long v)
 {
 	return isaddcon(v) || isaddcon(-v);
+}
+
+int
+usableoffset(Node *n, vlong o, Node *v)
+{
+	int s, et;
+
+	et = v->type->etype;
+	if(v->op != OCONST || typefd[et])
+		return 0;
+	s = n->type->width;
+	if(s > 16)
+		s = 16;
+	o += v->vconst;
+	return o >= -256 || o < 4095*s;
 }
 
 long
