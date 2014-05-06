@@ -463,7 +463,7 @@ asmout(Prog *p, Optab *o)
 		s = movesize(o->as);
 		if(s < 0)
 			diag("unexpected long move, op %A tab %A\n%P", p->as, o->as, p);
-		v = regoff(&p->to);
+		v = regoff(&p->from);
 		if(v < 0)
 			diag("negative large offset\n%P", p);
 		if((v & ((1<<s)-1)) != 0)
@@ -471,11 +471,12 @@ asmout(Prog *p, Optab *o)
 		hi = v - (v & (0xFFF<<s));
 		if((hi & 0xFFF) != 0)
 			diag("internal: miscalculated offset %ld [%d]\n%P", v, s, p);
-		r = p->to.reg;
+		//fprint(2, "v=%ld (%#lux) s=%d hi=%ld (%#lux) v'=%ld (%#lux)\n", v, v, s, hi, hi, ((v-hi)>>s)&0xFFF, ((v-hi)>>s)&0xFFF);
+		r = p->from.reg;
 		if(r == NREG)
 			r = o->param;
 		o1 = oaddi(opirr(AADD), hi, r, REGTMP);
-		o2 = olsr12u(opldr12(p->as), (v>>s)&0xFFF, REGTMP, p->from.reg);
+		o2 = olsr12u(opldr12(p->as), ((v-hi)>>s)&0xFFF, REGTMP, p->to.reg);
 		break;
 
 	case 32:	/* mov $con, R -> movz/movn */
