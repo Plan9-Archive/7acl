@@ -98,3 +98,31 @@ FCMPE
 
 MOVI	#bimm, Rn	 -> MOV
 Edit x s/(.)<<30 .*(.)<<23.*(.)<<22.*(.)<<21.*(.)<<15/LDSTX(\1,\2,\3,\4,\5)
+
+
+		if(s != A && regzer(s))
+			return 0;	/* r31 is sp not zr, don't touch */
+
+		r = 32;
+		if(p->as == AMOV)
+			r = 64;
+		d = p->from.offset;
+		s = movcon(d);
+		if(s < 0 || s >= r){
+			d = ~d;
+			s = movcon(d);
+			if(s < 0 || s >= r)
+				diag("impossible move wide: %#llux\n%P", p->from.offset, p);
+			if(p->as == AMOV)
+				o1 = opirr(AMOVN);
+			else
+				o1 = opirr(AMOVNW);
+		}else{
+			if(p->as == AMOV)
+				o1 = opirr(AMOVZ);
+			else
+				o1 = opirr(AMOVZW);
+		}
+		rt = p->to.reg;
+		o1 |= (((d>>(s*16))& 0xFFFF) << 5) | ((s&3)<<21) | rt;
+		break;
