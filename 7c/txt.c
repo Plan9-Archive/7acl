@@ -1014,8 +1014,10 @@ gopcode(int o, Node *f1, Node *f2, Node *t)
 
 	case OASADD:
 	case OADD:
-		a = AADD;
-		if(et == TFLOAT)
+		a = AADDW;
+		if(isv(et))
+			a = AADD;
+		else if(et == TFLOAT)
 			a = AFADDS;
 		else if(et == TDOUBLE)
 			a = AFADDD;
