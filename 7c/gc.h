@@ -219,8 +219,11 @@ int	bcomplex(Node*, Node*);
 /*
  * cgen.c
  */
+int	castup(Type*, Type*);
 void	cgen(Node*, Node*);
 void	cgenrel(Node*, Node*, int);
+int	cond(int);
+int	hardconst(Node*);
 void	reglcgen(Node*, Node*, Node*);
 void	layout(Node*, Node*, int, int, Node*);
 void	lcgen(Node*, Node*);
@@ -242,7 +245,6 @@ Node*	nod32const(vlong);
 Node*	nodfconst(double);
 void	nodreg(Node*, Node*, int);
 void	regret(Node*, Node*);
-int	tmpreg(void);
 void	regalloc(Node*, Node*, Node*);
 void	regfree(Node*);
 void	regialloc(Node*, Node*, Node*);
@@ -264,6 +266,7 @@ void	patch(Prog*, long);
 int	sconst(Node*);
 int	sval(long);
 void	gpseudo(int, Sym*, Node*);
+int	usableoffset(Node*, vlong, Node*);
 
 /*
  * swt.c
