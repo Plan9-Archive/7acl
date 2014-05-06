@@ -413,8 +413,14 @@ subprop(Reg *r0)
 		case ANGCS:
 		case ANGCSW:
 		case ANGCW:
+		case AMVN:
+		case AMVNW:
 		case AFNEGD:
 		case AFNEGS:
+		case AFABSS:
+		case AFABSD:
+		case AFSQRTS:
+		case AFSQRTD:
 		case AFMOVS:
 		case AFMOVD:
 		case AMOVW:
@@ -950,6 +956,8 @@ copyu(Prog *p, Adr *v, Adr *s)
 	case AMOVWU:
 	case AMOV:
 
+	case AMVN:
+	case AMVNW:
 	case ANEG:
 	case ANEGS:
 	case ANEGW:
@@ -1192,8 +1200,6 @@ a2type(Prog *p)
 	case ALSRW:
 	case AASR:
 	case AASRW:
-	case ANEG:
-	case ANEGW:
 	case AORR:
 	case AORRW:
 	case AAND:
