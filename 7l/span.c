@@ -1,5 +1,7 @@
 #include	"l.h"
 
+#define	BIT(n)	((uvlong)1<<(n))
+
 static struct {
 	ulong	start;
 	ulong	size;
@@ -307,6 +309,58 @@ isbitcon(uvlong v)
 {
 	/*  fancy bimm32 or bimm64? */
 	return findmask(v) != nil || (v>>32) == 0 && findmask(v | (v<<32)) != nil;
+}
+
+static int
+maxstr1(uvlong x)
+{
+	int i;
+
+	for(i = 0; x != 0; i++)
+		x &= x<<1;
+	return i;
+}
+
+static uvlong
+findrotl(uvlong x, int *l)
+{
+	int i;
+
+	for(i = 0; (x&1) == 0 || (x&BIT(63)) != 0; i++)
+		x = (x<<1) | ((x&BIT(63))!=0);
+	*l = i;
+	return x;
+}
+
+static int
+findmask64(Mask *m, uvlong v)
+{
+	uvlong x, f, fm;
+	int i, lr, l0, l1, e;
+
+	if(v == 0 || v == ~(uvlong)0)
+		return 0;
+	x = findrotl(v, &lr);
+	l1 = maxstr1(x);
+	l0 = maxstr1(~x);
+	e = l0+l1;
+	if(e == 0 || l1 == 64 || l0 == 64 || 64%e != 0)
+		return 0;
+	if(e != 64){
+		f = BIT(l1)-1;
+		fm = BIT(e)-1;
+		if(e > 32 && x != f)
+			return 0;
+		for(i = 0; i < 64; i += e)
+			if(((x>>i) & fm) != f)
+				return 0;
+	}
+	print("%#llux	%#llux 1:%d 0:%d r:%d\n", v, x, l1, l0, lr%e);
+	m->v = v;
+	m->s = l1;
+	m->e = e;
+	m->r = lr%e;
+	return 1;
 }
 
 /*
