@@ -1160,8 +1160,15 @@ buildop(void)
 			oprange[AFMINNMD] = t;
 			oprange[AFMINNMS] = t;
 			oprange[AFDIVD] = t;
-			oprange[AFCVTSD] = t;
+			break;
+		case AFCVTSD:
 			oprange[AFCVTDS] = t;
+			oprange[AFABSD] = t;
+			oprange[AFABSS] = t;
+			oprange[AFNEGD] = t;
+			oprange[AFNEGS] = t;
+			oprange[AFSQRTD] = t;
+			oprange[AFSQRTS] = t;
 			break;
 		case AFCMPS:
 			oprange[AFCMPD] = t;
@@ -1172,6 +1179,9 @@ buildop(void)
 			oprange[AFCCMPD] = t;
 			oprange[AFCCMPES] = t;
 			oprange[AFCCMPED] = t;
+			break;
+		case AFCSELD:
+			oprange[AFCSELS] = t;
 			break;
 
 		case AFMOVS:
