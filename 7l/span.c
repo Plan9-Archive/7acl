@@ -1148,7 +1148,17 @@ buildop(void)
 			oprange[AFSUBD] = t;
 			oprange[AFMULS] = t;
 			oprange[AFMULD] = t;
+			oprange[AFNMULS] = t;
+			oprange[AFNMULD] = t;
 			oprange[AFDIVS] = t;
+			oprange[AFMAXD] = t;
+			oprange[AFMAXS] = t;
+			oprange[AFMIND] = t;
+			oprange[AFMINS] = t;
+			oprange[AFMAXNMD] = t;
+			oprange[AFMAXNMS] = t;
+			oprange[AFMINNMD] = t;
+			oprange[AFMINNMS] = t;
 			oprange[AFDIVD] = t;
 			oprange[AFCVTSD] = t;
 			oprange[AFCVTDS] = t;
