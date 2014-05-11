@@ -377,5 +377,8 @@ Optab	optab[] =
 	{ ASTXR,		C_REG,	C_REG,	C_ZOREG,		59, 4, 0 },
 	{ ASTXP,		C_REG, C_REG,	C_ZOREG,		59, 4, 0 },
 
+	{ AAESD,	C_VREG,	C_NONE,	C_VREG,	29, 4, 0 },
+	{ ASHA1C,	C_VREG,	C_REG,	C_VREG,	1, 4, 0 },
+
 	{ AXXX,		C_NONE,	C_NONE,	C_NONE,		 0, 4, 0 },
 };

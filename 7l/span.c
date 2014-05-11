@@ -460,6 +460,9 @@ aclass(Adr *a)
 	case D_REG:
 		return C_REG;
 
+	case D_VREG:
+		return C_VREG;
+
 	case D_SP:
 		return C_RSP;
 
@@ -1220,7 +1223,24 @@ buildop(void)
 		case ASTXP:
 			oprange[ASTXPW] = t;
 			break;
-			
+
+		case AAESD:
+			oprange[AAESE] = t;
+			oprange[AAESMC] = t;
+			oprange[AAESIMC] = t;
+			oprange[ASHA1H] = t;
+			oprange[ASHA1SU1] = t;
+			oprange[ASHA256SU0] = t;
+			break;
+
+		case ASHA1C:
+			oprange[ASHA1P] = t;
+			oprange[ASHA1M] = t;
+			oprange[ASHA1SU0] = t;
+			oprange[ASHA256H] = t;
+			oprange[ASHA256H2] = t;
+			oprange[ASHA256SU1] = t;
+			break;
 		}
 	}
 }

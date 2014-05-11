@@ -212,6 +212,8 @@ enum
 	C_XPOST,
 	C_XPRE,
 
+	C_VREG,
+
 	C_GOK,
 
 /* mark flags */
