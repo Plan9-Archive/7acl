@@ -354,6 +354,8 @@ char*	anames[] =
 	"FNMADDD",
 	"FNMSUBS",
 	"FNMSUBD",
+	"FMINNMS",
+	"FMINNMD",
 	"AESD",
 	"AESE",
 	"AESIMC",
