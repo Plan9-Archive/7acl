@@ -356,6 +356,10 @@ Optab	optab[] =
 
 	{ AFCCMPS,	C_COND,	C_REG,	C_LCON,		57, 4, 0 },
 
+	{ AFCSELD,	C_COND,	C_REG,	C_FREG,		18, 4, 0 },
+
+	{ AFCVTSD,	C_FREG,	C_NONE,	C_FREG,		29, 4, 0 },
+
 	{ ACASE,	C_REG,	C_NONE,	C_REG,		62, 4*4, 0 },
 	{ ABCASE,	C_NONE, C_NONE, C_SBRA,		63, 4, 0 },
 

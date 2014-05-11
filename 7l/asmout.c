@@ -1099,6 +1099,16 @@ oprrr(int a)
 	case AFMULD:	return FPOP2S(0, 0, 1, 0);
 	case AFDIVS:	return FPOP2S(0, 0, 0, 1);
 	case AFDIVD:	return FPOP2S(0, 0, 1, 1);
+	case AFMAXS:	return FPOP2S(0, 0, 0, 4);
+	case AFMINS:	return FPOP2S(0, 0, 0, 5);
+	case AFMAXD:	return FPOP2S(0, 0, 1, 4);
+	case AFMIND:	return FPOP2S(0, 0, 1, 5);
+	case AFMAXNMS:	return FPOP2S(0, 0, 0, 6);
+	case AFMAXNMD:	return FPOP2S(0, 0, 1, 6);
+	case AFMINNMS:	return FPOP2S(0, 0, 0, 7);
+	case AFMINNMD:	return FPOP2S(0, 0, 1, 7);
+	case AFNMULS:		return FPOP2S(0, 0, 0, 8);
+	case AFNMULD:	return FPOP2S(0, 0, 1, 8);
 
 	case AFCMPS:	return FPCMP(0, 0, 0, 0, 0);
 	case AFCMPD:	return FPCMP(0, 0, 1, 0, 0);
@@ -1110,6 +1120,15 @@ oprrr(int a)
 	case AFCCMPES:	return FPCCMP(0, 0, 0, 1);
 	case AFCCMPED:	return FPCCMP(0, 0, 1, 1);
 
+	case AFCSELS:	return 0x1E<<24 | 0<<22 | 1<<21 | 3<<10;
+	case AFCSELD:	return 0x1E<<24 | 1<<22 | 1<<21 | 3<<10;
+
+	case AFABSS:	return FPOP1S(0, 0, 0, 1);
+	case AFNEGS:	return FPOP1S(0, 0, 0, 2);
+	case AFSQRTS:	return FPOP1S(0, 0, 0, 3);
+	case AFABSD:	return FPOP1S(0, 0, 1, 1);
+	case AFNEGD:	return FPOP1S(0, 0, 1, 2);
+	case AFSQRTD:	return FPOP1S(0, 0, 1, 3);
 	}
 	diag("bad rrr %d %A", a, a);
 	prasm(curp);
