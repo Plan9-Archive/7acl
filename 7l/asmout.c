@@ -50,7 +50,6 @@ static long	opxrrr(int);
 static long	olsxrr(int, int, int, int);
 static long	oprrr(int);
 static long	opirr(int);
-static long	opfprrr(int);
 static long	opldr12(int);
 static long	opldrpp(int);
 static long	opload(int);
@@ -748,7 +747,7 @@ asmout(Prog *p, Optab *o)
 		break;
 
 	case 54:	/* floating point arith */
-		o1 = opfprrr(p->as);
+		o1 = oprrr(p->as);
 		if(p->from.type == D_FCONST) {
 			rf = chipfloat(p->from.ieee);
 			if(rf < 0 || 1){
@@ -768,13 +767,8 @@ asmout(Prog *p, Optab *o)
 		o1 |= (rf << 16) | (r<<5) | rt;
 		break;
 
-	case 55:	/* floating point fix and float */
-		o1 = opfprrr(p->as);
-		o1 |= p->from.reg<<5 | p->to.reg;
-		break;
-
 	case 56:	/* floating point compare */
-		o1 = opfprrr(p->as);
+		o1 = oprrr(p->as);
 		if(p->from.type == D_FCONST) {
 			if(p->from.ieee->h != 0 || p->from.ieee->l != 0)
 				diag("invalid floating-point immediate\n%P", p);
@@ -787,7 +781,7 @@ asmout(Prog *p, Optab *o)
 		break;
 
 	case 57:	/* floating point conditional compare */
-		o1 = opfprrr(p->as);
+		o1 = oprrr(p->as);
 		cond = p->from.reg;
 		nzcv = p->to.offset;
 		if(nzcv & ~0xF)
@@ -1072,6 +1066,49 @@ oprrr(int a)
 	case ASHA1H:	return 0x5E<<24 | 2<<20 | 8<<16 | 0<<12 | 2<<10;
 	case ASHA1SU1:	return 0x5E<<24 | 2<<20 | 8<<16 | 1<<12 | 2<<10;
 	case ASHA256SU0:	return 0x5E<<24 | 2<<20 | 8<<16 | 2<<12 | 2<<10;
+
+	case AFCVTZSD:	return FPCVTI(1, 0, 1, 3, 0);
+	case AFCVTZSDW:	return FPCVTI(0, 0, 1, 3, 0);
+	case AFCVTZSS:	return FPCVTI(1, 0, 0, 3, 0);
+	case AFCVTZSSW:	return FPCVTI(0, 0, 0, 3, 0);
+
+	case AFCVTZUD:	return FPCVTI(1, 0, 1, 3, 1);
+	case AFCVTZUDW:	return FPCVTI(0, 0, 1, 3, 1);
+	case AFCVTZUS:	return FPCVTI(1, 0, 0, 3, 1);
+	case AFCVTZUSW:	return FPCVTI(0, 0, 0, 3, 1);
+
+	case ASCVTFD:		return FPCVTI(1, 0, 1, 0, 2);
+	case ASCVTFS:		return FPCVTI(1, 0, 0, 0, 2);
+	case ASCVTFWD:	return FPCVTI(0, 0, 1, 0, 2);
+	case ASCVTFWS:	return FPCVTI(0, 0, 0, 0, 2);
+
+	case AUCVTFD:		return FPCVTI(1, 0, 1, 0, 3);
+	case AUCVTFS:		return FPCVTI(1, 0, 0, 0, 3);
+	case AUCVTFWD:	return FPCVTI(0, 0, 1, 0, 3);
+	case AUCVTFWS:	return FPCVTI(0, 0, 0, 0, 3);
+
+	case AFCVTSD:	return FPOP1S(0, 0, 0, 5);
+	case AFCVTDS:	return FPOP1S(0, 0, 1, 4);
+	case AFMOVS:	return FPOP1S(0, 0, 0, 0);
+	case AFMOVD:	return FPOP1S(0, 0, 1, 0);
+	case AFADDS:	return FPOP2S(0, 0, 0, 2);
+	case AFADDD:	return FPOP2S(0, 0, 1, 2);
+	case AFSUBS:	return FPOP2S(0, 0, 0, 3);
+	case AFSUBD:	return FPOP2S(0, 0, 1, 3);
+	case AFMULS:	return FPOP2S(0, 0, 0, 0);
+	case AFMULD:	return FPOP2S(0, 0, 1, 0);
+	case AFDIVS:	return FPOP2S(0, 0, 0, 1);
+	case AFDIVD:	return FPOP2S(0, 0, 1, 1);
+
+	case AFCMPS:	return FPCMP(0, 0, 0, 0, 0);
+	case AFCMPD:	return FPCMP(0, 0, 1, 0, 0);
+	case AFCMPES:	return FPCMP(0, 0, 0, 0, 16);
+	case AFCMPED:	return FPCMP(0, 0, 1, 0, 16);
+
+	case AFCCMPS:		return FPCCMP(0, 0, 0, 0);
+	case AFCCMPD:	return FPCCMP(0, 0, 1, 0);
+	case AFCCMPES:	return FPCCMP(0, 0, 0, 1);
+	case AFCCMPED:	return FPCCMP(0, 0, 1, 1);
 
 	}
 	diag("bad rrr %d %A", a, a);
@@ -1599,63 +1636,6 @@ opextr(int a, long v, int rn, int rm, int rt)
 	o |= rm << 16;
 	o |= rt;
 	return o;
-}
-
-/*
- * floating-point
- */
-
-static long
-opfprrr(int a)
-{
-	switch(a) {
-
-	case AFCVTZSD:	return FPCVTI(1, 0, 1, 3, 0);
-	case AFCVTZSDW:	return FPCVTI(0, 0, 1, 3, 0);
-	case AFCVTZSS:	return FPCVTI(1, 0, 0, 3, 0);
-	case AFCVTZSSW:	return FPCVTI(0, 0, 0, 3, 0);
-
-	case AFCVTZUD:	return FPCVTI(1, 0, 1, 3, 1);
-	case AFCVTZUDW:	return FPCVTI(0, 0, 1, 3, 1);
-	case AFCVTZUS:	return FPCVTI(1, 0, 0, 3, 1);
-	case AFCVTZUSW:	return FPCVTI(0, 0, 0, 3, 1);
-
-	case ASCVTFD:		return FPCVTI(1, 0, 1, 0, 2);
-	case ASCVTFS:		return FPCVTI(1, 0, 0, 0, 2);
-	case ASCVTFWD:	return FPCVTI(0, 0, 1, 0, 2);
-	case ASCVTFWS:	return FPCVTI(0, 0, 0, 0, 2);
-
-	case AUCVTFD:		return FPCVTI(1, 0, 1, 0, 3);
-	case AUCVTFS:		return FPCVTI(1, 0, 0, 0, 3);
-	case AUCVTFWD:	return FPCVTI(0, 0, 1, 0, 3);
-	case AUCVTFWS:	return FPCVTI(0, 0, 0, 0, 3);
-
-	case AFCVTSD:	return FPOP1S(0, 0, 0, 5);
-	case AFCVTDS:	return FPOP1S(0, 0, 1, 4);
-	case AFMOVS:	return FPOP1S(0, 0, 0, 0);
-	case AFMOVD:	return FPOP1S(0, 0, 1, 0);
-	case AFADDS:	return FPOP2S(0, 0, 0, 2);
-	case AFADDD:	return FPOP2S(0, 0, 1, 2);
-	case AFSUBS:	return FPOP2S(0, 0, 0, 3);
-	case AFSUBD:	return FPOP2S(0, 0, 1, 3);
-	case AFMULS:	return FPOP2S(0, 0, 0, 0);
-	case AFMULD:	return FPOP2S(0, 0, 1, 0);
-	case AFDIVS:	return FPOP2S(0, 0, 0, 1);
-	case AFDIVD:	return FPOP2S(0, 0, 1, 1);
-
-	case AFCMPS:	return FPCMP(0, 0, 0, 0, 0);
-	case AFCMPD:	return FPCMP(0, 0, 1, 0, 0);
-	case AFCMPES:	return FPCMP(0, 0, 0, 0, 16);
-	case AFCMPED:	return FPCMP(0, 0, 1, 0, 16);
-
-	case AFCCMPS:		return FPCCMP(0, 0, 0, 0);
-	case AFCCMPD:	return FPCCMP(0, 0, 1, 0);
-	case AFCCMPES:	return FPCCMP(0, 0, 0, 1);
-	case AFCCMPED:	return FPCCMP(0, 0, 1, 1);
-
-	}
-	diag("bad fp rrr %A\n%P", a, curp);
-	return 0;
 }
 
 /*
