@@ -439,6 +439,11 @@ asmout(Prog *p, Optab *o)
 		o2 |= p->to.reg;
 		break;
 
+	case 29:	/* op Rn, Rd */
+		o1 = oprrr(p->as);
+		o1 |= p->from.reg<<5 | p->to.reg;
+		break;
+
 	case 30:	/* movT R,L(R) -> strT */
 		s = movesize(o->as);
 		if(s < 0)
@@ -765,9 +770,7 @@ asmout(Prog *p, Optab *o)
 
 	case 55:	/* floating point fix and float */
 		o1 = opfprrr(p->as);
-		rf = p->from.reg;
-		rt = p->to.reg;
-		o1 |= (rf<<5) | rt;
+		o1 |= p->from.reg<<5 | p->to.reg;
 		break;
 
 	case 56:	/* floating point compare */
@@ -1053,6 +1056,23 @@ oprrr(int a)
 	case AUREMW:
 	case AUDIVW:	return S32 | OPDP2(2);
 
+	case AAESE:	return 0x4E<<24 | 2<<20 | 8<<16 | 4<<12 | 2<<10;
+	case AAESD:	return 0x4E<<24 | 2<<20 | 8<<16 | 5<<12 | 2<<10;
+	case AAESMC:	return 0x4E<<24 | 2<<20 | 8<<16 | 6<<12 | 2<<10;
+	case AAESIMC:	return 0x4E<<24 | 2<<20 | 8<<16 | 7<<12 | 2<<10;
+
+	case ASHA1C:	return 0x5E<<24 | 0<<12;
+	case ASHA1P:	return 0x5E<<24 | 1<<12;
+	case ASHA1M:	return 0x5E<<24 | 2<<12;
+	case ASHA1SU0:	return 0x5E<<24 | 3<<12;
+	case ASHA256H:	return 0x5E<<24 | 4<<12;
+	case ASHA256H2:	return 0x5E<<24 | 5<<12;
+	case ASHA256SU1:	return 0x5E<<24 | 6<<12;
+
+	case ASHA1H:	return 0x5E<<24 | 2<<20 | 8<<16 | 0<<12 | 2<<10;
+	case ASHA1SU1:	return 0x5E<<24 | 2<<20 | 8<<16 | 1<<12 | 2<<10;
+	case ASHA256SU0:	return 0x5E<<24 | 2<<20 | 8<<16 | 2<<12 | 2<<10;
+
 	}
 	diag("bad rrr %d %A", a, a);
 	prasm(curp);
@@ -1211,7 +1231,6 @@ opxrrr(int a)
 	diag("bad opxrrr %A\n%P", a, curp);
 	return 0;
 }
-
 
 static long
 opimm(int a)
