@@ -718,6 +718,10 @@ TEXT	_aes(SB), $-4
 	SHA256SU1	V1, V2, V3
 	RETURN
 
+TEXT _movacon(SB), $-4
+	MOV	$0x3e000, R1	// check that ADDCON<<12 doesn't confuse
+	RETURN
+
 GLOBL	ext1+0(SB), $1
 GLOBL	ext2+0(SB), $2
 GLOBL	ext3+0(SB), $4
