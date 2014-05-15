@@ -575,6 +575,8 @@ aclass(Adr *a)
 			if(isaddcon(v)){
 				if(isbitcon(v))
 					return C_ABCON;
+				if(v <= 0xFFF)
+					return C_ADDCON0;
 				return C_ADDCON;
 			}
 			t = movcon(v);
@@ -718,8 +720,13 @@ cmp(int a, int b)
 			return 1;
 		break;
 
+	case C_ADDCON0:
+		if(b == C_ZCON)
+			return 1;
+		break;
+
 	case C_ADDCON:
-		if(b == C_ZCON || b == C_ABCON)
+		if(b == C_ZCON || b == C_ADDCON0 || b == C_ABCON)
 			return 1;
 		break;
 
@@ -728,18 +735,18 @@ cmp(int a, int b)
 			return 1;
 		break;
 
+	case C_MOVCON:
+		if(b == C_MBCON || b == C_ZCON || b == C_ADDCON0)
+			return 1;
+		break;
+
 	case C_LCON:
-		if(b == C_ZCON || b == C_BITCON || b == C_ADDCON || b == C_ABCON || b == C_MBCON || b == C_MOVCON)
+		if(b == C_ZCON || b == C_BITCON || b == C_ADDCON || b == C_ADDCON0 || b == C_ABCON || b == C_MBCON || b == C_MOVCON)
 			return 1;
 		break;
 
 	case C_VCON:
 		return cmp(C_LCON, b);
-
-	case C_MOVCON:
-		if(b == C_MBCON || cmp(C_ADDCON,b))
-			return 1;
-		break;
 
 	case C_LACON:
 		if(b == C_AACON)
