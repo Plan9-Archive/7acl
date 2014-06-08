@@ -339,7 +339,7 @@ asmsym(void)
 			putsymb(s->name, 'L', s->value, s->version);
 
 		/* frame, auto and param after */
-		putsymb(".frame", 'm', p->to.offset+4, 0);
+		putsymb(".frame", 'm', p->to.offset+PCSZ, 0);
 		for(a=p->to.autom; a; a=a->link)
 			if(a->type == D_AUTO)
 				putsymb(a->asym->name, 'a', -a->aoffset, 0);
