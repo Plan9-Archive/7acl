@@ -427,3 +427,9 @@ void	xfol(Prog*);
 void	zerosig(char*);
 void	noops(void);
 Mask*	findmask(uvlong);
+
+#define	isbranch(a)	((a) == AB)
+#define	iscall(a)	((a) == ABL)
+#define	isreturn(a)	((a) == ARETURN || (a) == ARET || (a) == AERET)
+#define	branchop()	AB
+#define	canfollow(a)	((a) != ATEXT && (a) != ABCASE)
