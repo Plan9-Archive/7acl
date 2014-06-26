@@ -119,25 +119,13 @@ dodata(void)
 	xdefine("etext", STEXT, 0L);
 }
 
-void
-undef(void)
-{
-	int i;
-	Sym *s;
-
-	for(i=0; i<NHASH; i++)
-	for(s = hash[i]; s != S; s = s->link)
-		if(s->type == SXREF)
-			diag("%s: not defined", s->name);
-}
-
 Prog*
 brchain(Prog *p)
 {
 	int i;
 
 	for(i=0; i<20; i++) {
-		if(p == P || p->as != AB)
+		if(p == P || !isbranch(p->as))
 			return p;
 		p = p->cond;
 	}
@@ -196,7 +184,7 @@ loop:
 	a = p->as;
 	if(a == ATEXT)
 		curtext = p;
-	if(a == AB) {
+	if(isbranch(a)) {
 		q = p->cond;
 		if(q != P) {
 			p->mark |= FOLL;
@@ -214,7 +202,7 @@ loop:
 				i--;
 				continue;
 			}
-			if(a == AB || a == ARETURN || a == ARET || a == AERET)
+			if(isbranch(a) || isreturn(a))
 				goto copy;
 			if(q->cond == nil || (q->cond->mark&FOLL))
 				continue;
@@ -235,11 +223,9 @@ loop:
 				}
 				lastp->link = r;
 				lastp = r;
-				if(a == AB || a == ARETURN || a == ARET || a == AERET)
+				if(isbranch(a) || isreturn(a))
 					return;
-				r->as = ABNE;
-				if(a == ABNE)
-					r->as = ABEQ;
+				r->as = a == ABNE? ABEQ: ABNE;
 				r->cond = p->link;
 				r->link = p->cond;
 				if(!(r->link->mark&FOLL))
@@ -261,13 +247,12 @@ loop:
 	p->mark |= FOLL;
 	lastp->link = p;
 	lastp = p;
-	if(a == AB || a == ARETURN || a == ARET || a == AERET){
+	if(isbranch(a) || isreturn(a))
 		return;
-	}
 	if(p->cond != P)
-	if(a != ABL && p->link != P) {
+	if(!iscall(a) && p->link != P) {
 		q = brchain(p->link);
-		if(a != ATEXT && a != ABCASE)
+		if(canfollow(a))
 		if(q != P && (q->mark&FOLL)) {
 			p->as = relinv(a);
 			p->link = p->cond;
@@ -306,7 +291,7 @@ patch(void)
 		a = p->as;
 		if(a == ATEXT)
 			curtext = p;
-		if((a == ABL || a == AB || a == ARETURN || a == ARET || a == AERET) &&
+		if((iscall(a) || isbranch(a) || isreturn(a)) &&
 		   p->to.type != D_BRANCH && p->to.sym != S) {
 			s = p->to.sym;
 			switch(s->type) {
@@ -319,7 +304,7 @@ patch(void)
 				p->to.offset = s->value;
 				break;
 			case SUNDEF:
-				if(p->as != ABL)
+				if(!iscall(p->as))
 					diag("help: SUNDEF in AB || ARET");
 				p->to.offset = 0;
 				p->cond = UP;
@@ -407,7 +392,7 @@ brloop(Prog *p)
 	int c;
 
 	for(c=0; p!=P;) {
-		if(p->as != AB)
+		if(!isbranch(p->as))
 			return p;
 		q = p->cond;
 		if(q <= p) {
@@ -418,196 +403,4 @@ brloop(Prog *p)
 		p = q;
 	}
 	return P;
-}
-
-vlong
-atolwhex(char *s)
-{
-	vlong n;
-	int f;
-
-	n = 0;
-	f = 0;
-	while(*s == ' ' || *s == '\t')
-		s++;
-	if(*s == '-' || *s == '+') {
-		if(*s++ == '-')
-			f = 1;
-		while(*s == ' ' || *s == '\t')
-			s++;
-	}
-	if(s[0]=='0' && s[1]){
-		if(s[1]=='x' || s[1]=='X'){
-			s += 2;
-			for(;;){
-				if(*s >= '0' && *s <= '9')
-					n = n*16 + *s++ - '0';
-				else if(*s >= 'a' && *s <= 'f')
-					n = n*16 + *s++ - 'a' + 10;
-				else if(*s >= 'A' && *s <= 'F')
-					n = n*16 + *s++ - 'A' + 10;
-				else
-					break;
-			}
-		} else
-			while(*s >= '0' && *s <= '7')
-				n = n*8 + *s++ - '0';
-	} else
-		while(*s >= '0' && *s <= '9')
-			n = n*10 + *s++ - '0';
-	if(f)
-		n = -n;
-	return n;
-}
-
-vlong
-rnd(vlong v, long r)
-{
-	long c;
-
-	if(r <= 0)
-		return v;
-	v += r - 1;
-	c = v % r;
-	if(c < 0)
-		c += r;
-	v -= c;
-	return v;
-}
-
-void
-import(void)
-{
-	int i;
-	Sym *s;
-
-	for(i = 0; i < NHASH; i++)
-		for(s = hash[i]; s != S; s = s->link)
-			if(s->sig != 0 && s->type == SXREF && (nimports == 0 || s->subtype == SIMPORT)){
-				undefsym(s);
-				Bprint(&bso, "IMPORT: %s sig=%lux v=%ld\n", s->name, s->sig, s->value);
-			}
-}
-
-void
-ckoff(Sym *s, long v)
-{
-	if(v < 0 || v >= 1<<Roffset)
-		diag("relocation offset %ld for %s out of range", v, s->name);
-}
-
-static Prog*
-newdata(Sym *s, int o, int w, int t)
-{
-	Prog *p;
-
-	p = prg();
-	p->link = datap;
-	datap = p;
-	p->as = ADATA;
-	p->reg = w;
-	p->from.type = D_OREG;
-	p->from.name = t;
-	p->from.sym = s;
-	p->from.offset = o;
-	p->to.type = D_CONST;
-	p->to.name = D_NONE;
-	return p;
-}
-
-void
-export(void)
-{
-	int i, j, n, off, nb, sv, ne;
-	Sym *s, *et, *str, **esyms;
-	Prog *p;
-	char buf[NSNAME], *t;
-
-	n = 0;
-	for(i = 0; i < NHASH; i++)
-		for(s = hash[i]; s != S; s = s->link)
-			if(s->sig != 0 && s->type != SXREF && s->type != SUNDEF && (nexports == 0 || s->subtype == SEXPORT))
-				n++;
-	esyms = malloc(n*sizeof(Sym*));
-	ne = n;
-	n = 0;
-	for(i = 0; i < NHASH; i++)
-		for(s = hash[i]; s != S; s = s->link)
-			if(s->sig != 0 && s->type != SXREF && s->type != SUNDEF && (nexports == 0 || s->subtype == SEXPORT))
-				esyms[n++] = s;
-	for(i = 0; i < ne-1; i++)
-		for(j = i+1; j < ne; j++)
-			if(strcmp(esyms[i]->name, esyms[j]->name) > 0){
-				s = esyms[i];
-				esyms[i] = esyms[j];
-				esyms[j] = s;
-			}
-
-	nb = 0;
-	off = 0;
-	et = lookup(EXPTAB, 0);
-	if(et->type != 0 && et->type != SXREF)
-		diag("%s already defined", EXPTAB);
-	et->type = SDATA;
-	str = lookup(".string", 0);
-	if(str->type == 0)
-		str->type = SDATA;
-	sv = str->value;
-	for(i = 0; i < ne; i++){
-		s = esyms[i];
-		Bprint(&bso, "EXPORT: %s sig=%lux t=%d\n", s->name, s->sig, s->type);
-
-		/* signature */
-		p = newdata(et, off, sizeof(long), D_EXTERN);
-		off += sizeof(long);
-		p->to.offset = s->sig;
-
-		/* address */
-		p = newdata(et, off, sizeof(long), D_EXTERN);
-		off += sizeof(long);
-		p->to.name = D_EXTERN;
-		p->to.sym = s;
-
-		/* string */
-		t = s->name;
-		n = strlen(t)+1;
-		for(;;){
-			buf[nb++] = *t;
-			sv++;
-			if(nb >= NSNAME){
-				p = newdata(str, sv-NSNAME, NSNAME, D_STATIC);
-				p->to.type = D_SCONST;
-				p->to.sval = malloc(NSNAME);
-				memmove(p->to.sval, buf, NSNAME);
-				nb = 0;
-			}
-			if(*t++ == 0)
-				break;
-		}
-
-		/* name */
-		p = newdata(et, off, sizeof(long), D_EXTERN);
-		off += sizeof(long);
-		p->to.name = D_STATIC;
-		p->to.sym = str;
-		p->to.offset = sv-n;
-	}
-
-	if(nb > 0){
-		p = newdata(str, sv-nb, nb, D_STATIC);
-		p->to.type = D_SCONST;
-		p->to.sval = malloc(NSNAME);
-		memmove(p->to.sval, buf, nb);
-	}
-
-	for(i = 0; i < 3; i++){
-		newdata(et, off, sizeof(long), D_EXTERN);
-		off += sizeof(long);
-	}
-	et->value = off;
-	if(sv == 0)
-		sv = 1;
-	str->value = sv;
-	exports = ne;
-	free(esyms);
 }
