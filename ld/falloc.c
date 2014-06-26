@@ -6,16 +6,7 @@
 void*
 malloc(usize n)
 {
-	void *p;
-
-	while(n & 7)
-		n++;
-	while(nhunk < n)
-		gethunk();
-	p = hunk;
-	nhunk -= n;
-	hunk += n;
-	return p;
+	return halloc(n);
 }
 
 void

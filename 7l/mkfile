@@ -12,6 +12,8 @@ OFILES=\
 	obj.$O\
 	optab.$O\
 	pass.$O\
+	pobj.$O\
+	ppass.$O\
 	span.$O\
 	sub.$O\
 	enam.$O\
@@ -22,6 +24,7 @@ HFILES=\
 	l.h\
 	../7c/7.out.h\
 	../ld/elf.h\
+	../ld/ld.h\
 
 BIN=/$objtype/bin
 CFLAGS=$CFLAGS -. -I.
