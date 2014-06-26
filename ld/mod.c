@@ -1,6 +1,71 @@
 #include	"l.h"
 
 void
+readundefs(char *f, int t)
+{
+	int i, n;
+	Sym *s;
+	Biobuf *b;
+	char *l, buf[256], *fields[64];
+
+	if(f == nil)
+		return;
+	b = Bopen(f, OREAD);
+	if(b == nil){
+		diag("could not open %s: %r", f);
+		errorexit();
+	}
+	while((l = Brdline(b, '\n')) != nil){
+		n = Blinelen(b);
+		if(n >= sizeof(buf)){
+			diag("%s: line too long", f);
+			errorexit();
+		}
+		memmove(buf, l, n);
+		buf[n-1] = '\0';
+		n = getfields(buf, fields, nelem(fields), 1, " \t\r\n");
+		if(n == nelem(fields)){
+			diag("%s: bad format", f);
+			errorexit();
+		}
+		for(i = 0; i < n; i++){
+			s = lookup(fields[i], 0);
+			s->type = SXREF;
+			s->subtype = t;
+			if(t == SIMPORT)
+				nimports++;
+			else
+				nexports++;
+		}
+	}
+	Bterm(b);
+}
+
+void
+undefsym(Sym *s)
+{
+	int n;
+
+	n = imports;
+	if(s->value != 0)
+		diag("value != 0 on SXREF");
+	if(n >= 1<<Rindex)
+		diag("import index %d out of range", n);
+	s->value = n<<Roffset;
+	s->type = SUNDEF;
+	imports++;
+}
+
+void
+zerosig(char *sp)
+{
+	Sym *s;
+
+	s = lookup(sp, 0);
+	s->sig = 0;
+}
+
+void
 import(void)
 {
 	int i;

@@ -1,5 +1,21 @@
 #include	"l.h"
 
+static	usize	nhunk;
+static	usize	tothunk;
+static	char*	hunk;
+
+void
+errorexit(void)
+{
+
+	if(nerrors) {
+		if(cout >= 0)
+			remove(outfile);
+		exits("error");
+	}
+	exits(0);
+}
+
 void
 undef(void)
 {
@@ -65,4 +81,62 @@ rnd(vlong v, long r)
 		c += r;
 	v -= c;
 	return v;
+}
+
+Prog*
+prg(void)
+{
+	Prog *p;
+
+	while(nhunk < sizeof(Prog))
+		gethunk();
+	p = (Prog*)hunk;
+	nhunk -= sizeof(Prog);
+	hunk += sizeof(Prog);
+
+	*p = zprg;
+	return p;
+}
+
+void*
+halloc(usize n)
+{
+	void *p;
+
+	n = (n+7)&~7;
+	while(nhunk < n)
+		gethunk();
+	p = hunk;
+	nhunk -= n;
+	hunk += n;
+	return p;
+}
+
+void
+gethunk(void)
+{
+	char *h;
+	long nh;
+
+	nh = NHUNK;
+	if(tothunk >= 5L*NHUNK) {
+		nh = 5L*NHUNK;
+		if(tothunk >= 25L*NHUNK)
+			nh = 25L*NHUNK;
+	}
+	h = mysbrk(nh);
+	if(h == (void*)-1) {
+		diag("out of memory");
+		errorexit();
+	}
+
+	hunk = h;
+	nhunk = nh;
+	tothunk += nh;
+}
+
+long
+hunkspace(void)
+{
+	return tothunk;
 }

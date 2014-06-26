@@ -1,12 +1,12 @@
 #include	"l.h"
 #include	<ar.h>
 
-#ifndef	DEFAULT
-#define	DEFAULT	'9'
-#endif
-
 char	*noname		= "<none>";
 char	symname[]	= SYMDEF;
+
+char**	libdir;
+int	nlibdir	= 0;
+static	int	maxlibdir = 0;
 
 int
 isobjfile(char *f)
@@ -52,44 +52,32 @@ loop:
 }
 
 void
-errorexit(void)
-{
-
-	Bflush(&bso);
-	if(nerrors) {
-		if(cout >= 0)
-			remove(outfile);
-		exits("error");
-	}
-	exits(0);
-}
-
-void
 objfile(char *file)
 {
 	long off, esym, cnt, l;
 	int f, work;
 	Sym *s;
 	char magbuf[SARMAG];
-	char name[100], pname[150];
+	char name[LIBNAMELEN], pname[LIBNAMELEN];
 	struct ar_hdr arhdr;
 	char *e, *start, *stop;
 
-	if(file[0] == '-' && file[1] == 'l') {
-		if(debug['9'])
-			sprint(name, "/%s/lib/lib", thestring);
-		else
-			sprint(name, "/usr/%clib/lib", thechar);
-		strcat(name, file+2);
-		strcat(name, ".a");
-		file = name;
-	}
 	if(debug['v'])
 		Bprint(&bso, "%5.2f ldobj: %s\n", cputime(), file);
 	Bflush(&bso);
+	if(file[0] == '-' && file[1] == 'l') {
+		snprint(pname, sizeof(pname), "lib%s.a", file+2);
+		e = findlib(pname);
+		if(e == nil) {
+			diag("cannot find library: %s", file);
+			errorexit();
+		}
+		snprint(name, sizeof(name), "%s/%s", e, pname);
+		file = name;
+	}
 	f = open(file, 0);
 	if(f < 0) {
-		diag("cannot open file: %s", file);
+		diag("cannot open %s: %r", file);
 		errorexit();
 	}
 	l = read(f, magbuf, SARMAG);
@@ -102,6 +90,8 @@ objfile(char *file)
 		return;
 	}
 
+	if(debug['v'])
+		Bprint(&bso, "%5.2f ldlib: %s\n", cputime(), file);
 	l = read(f, &arhdr, SAR_HDR);
 	if(l != SAR_HDR) {
 		diag("%s: short read on archive file symbol header", file);
@@ -172,27 +162,62 @@ out:
 }
 
 void
+addlibpath(char *arg)
+{
+	char **p;
+
+	if(nlibdir >= maxlibdir) {
+		if(maxlibdir == 0)
+			maxlibdir = 8;
+		else
+			maxlibdir *= 2;
+		p = malloc(maxlibdir*sizeof(*p));
+		if(p == nil) {
+			diag("out of memory");
+			errorexit();
+		}
+		memmove(p, libdir, nlibdir*sizeof(*p));
+		free(libdir);
+		libdir = p;
+	}
+	libdir[nlibdir++] = strdup(arg);
+}
+
+char*
+findlib(char *file)
+{
+	int i;
+	char name[LIBNAMELEN];
+
+	for(i = 0; i < nlibdir; i++) {
+		snprint(name, sizeof(name), "%s/%s", libdir[i], file);
+		if(fileexists(name))
+			return libdir[i];
+	}
+	return nil;
+}
+
+void
 addlib(char *obj)
 {
-	char name[1024], comp[256], *p;
-	int i;
+	char fn1[LIBNAMELEN], fn2[LIBNAMELEN], comp[LIBNAMELEN], *p, *name;
+	int i, search;
 
 	if(histfrogp <= 0)
 		return;
 
+	name = fn1;
+	search = 0;
 	if(histfrog[0]->name[1] == '/') {
 		sprint(name, "");
 		i = 1;
-	} else
-	if(histfrog[0]->name[1] == '.') {
+	} else if(histfrog[0]->name[1] == '.') {
 		sprint(name, ".");
 		i = 0;
 	} else {
-		if(debug['9'])
-			sprint(name, "/%s/lib", thestring);
-		else
-			sprint(name, "/usr/%clib", thechar);
+		sprint(name, "");
 		i = 0;
+		search = 1;
 	}
 
 	for(; i<histfrogp; i++) {
@@ -215,13 +240,25 @@ addlib(char *obj)
 			memmove(p+strlen(thestring), p+2, strlen(p+2)+1);
 			memmove(p, thestring, strlen(thestring));
 		}
-		if(strlen(name) + strlen(comp) + 3 >= sizeof(name)) {
+		if(strlen(fn1) + strlen(comp) + 3 >= sizeof(fn1)) {
 			diag("library component too long");
 			return;
 		}
-		strcat(name, "/");
-		strcat(name, comp);
+		if(i > 0 || !search)
+			strcat(fn1, "/");
+		strcat(fn1, comp);
 	}
+
+	cleanname(name);
+
+	if(search){
+		p = findlib(name);
+		if(p != nil){
+			snprint(fn2, sizeof(fn2), "%s/%s", p, name);
+			name = fn2;
+		}
+	}
+
 	for(i=0; i<libraryp; i++)
 		if(strcmp(name, library[i]) == 0)
 			return;
@@ -250,7 +287,7 @@ addhist(long line, int type)
 	s = malloc(sizeof(Sym));
 	s->name = malloc(2*(histfrogp+1) + 1);
 
-	u->sym = s;
+	u->asym = s;
 	u->type = type;
 	u->aoffset = line;
 	u->link = curhist;
@@ -270,7 +307,7 @@ histtoauto(void)
 {
 	Auto *l;
 
-	while(l = curhist) {
+	while((l = curhist) != nil) {
 		curhist = l->link;
 		l->link = curauto;
 		curauto = l;
@@ -352,12 +389,7 @@ lookup(char *symb, int v)
 		if(memcmp(s->name, symb, l) == 0)
 			return s;
 
-	while(nhunk < sizeof(Sym))
-		gethunk();
-	s = (Sym*)hunk;
-	nhunk -= sizeof(Sym);
-	hunk += sizeof(Sym);
-
+	s = halloc(sizeof(Sym));
 	s->name = malloc(l + 1);
 	memmove(s->name, symb, l);
 
@@ -368,47 +400,6 @@ lookup(char *symb, int v)
 	s->sig = 0;
 	hash[h] = s;
 	return s;
-}
-
-Prog*
-prg(void)
-{
-	Prog *p;
-	int n;
-
-	n = (sizeof(Prog) + 3) & ~3;
-	while(nhunk < n)
-		gethunk();
-
-	p = (Prog*)hunk;
-	nhunk -= n;
-	hunk += n;
-
-	*p = zprg;
-	return p;
-}
-
-void
-gethunk(void)
-{
-	char *h;
-	long nh;
-
-	nh = NHUNK;
-	if(tothunk >= 5L*NHUNK) {
-		nh = 5L*NHUNK;
-		if(tothunk >= 25L*NHUNK)
-			nh = 25L*NHUNK;
-	}
-	h = mysbrk(nh);
-	if(h == (char *)-1) {
-		diag("out of memory");
-		errorexit();
-	}
-
-	hunk = h;
-	nhunk = nh;
-	tothunk += nh;
 }
 
 int
@@ -473,69 +464,4 @@ ieeedtod(Ieee *ieeep)
 	exp = (ieeep->h>>20) & ((1L<<11)-1L);
 	exp -= (1L<<10) - 2L;
 	return ldexp(fr, exp);
-}
-
-void
-undefsym(Sym *s)
-{
-	int n;
-
-	n = imports;
-	if(s->value != 0)
-		diag("value != 0 on SXREF");
-	if(n >= 1<<Rindex)
-		diag("import index %d out of range", n);
-	s->value = n<<Roffset;
-	s->type = SUNDEF;
-	imports++;
-}
-
-void
-zerosig(char *sp)
-{
-	Sym *s;
-
-	s = lookup(sp, 0);
-	s->sig = 0;
-}
-
-void
-readundefs(char *f, int t)
-{
-	int i, n;
-	Sym *s;
-	Biobuf *b;
-	char *l, buf[256], *fields[64];
-
-	if(f == nil)
-		return;
-	b = Bopen(f, OREAD);
-	if(b == nil){
-		diag("could not open %s: %r", f);
-		errorexit();
-	}
-	while((l = Brdline(b, '\n')) != nil){
-		n = Blinelen(b);
-		if(n >= sizeof(buf)){
-			diag("%s: line too long", f);
-			errorexit();
-		}
-		memmove(buf, l, n);
-		buf[n-1] = '\0';
-		n = getfields(buf, fields, nelem(fields), 1, " \t\r\n");
-		if(n == nelem(fields)){
-			diag("%s: bad format", f);
-			errorexit();
-		}
-		for(i = 0; i < n; i++){
-			s = lookup(fields[i], 0);
-			s->type = SXREF;
-			s->subtype = t;
-			if(t == SIMPORT)
-				nimports++;
-			else
-				nexports++;
-		}
-	}
-	Bterm(b);
 }

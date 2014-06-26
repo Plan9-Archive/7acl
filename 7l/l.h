@@ -1,24 +1,7 @@
-#include	<u.h>
-#include	<libc.h>
-#include	<bio.h>
+#include	"../ld/ld.h"
 #include	"../7c/7.out.h"
-#include	"../ld/elf.h"
-
-#ifndef	EXTERN
-#define	EXTERN	extern
-#endif
-
-#define	LIBNAMELEN	300
-
-void	addlibpath(char*);
-int	fileexists(char*);
-char*	findlib(char*);
-
-typedef vlong int64;
 
 typedef	struct	Adr	Adr;
-typedef	struct	Sym	Sym;
-typedef	struct	Autom	Auto;
 typedef	struct	Mask	Mask;
 typedef	struct	Prog	Prog;
 typedef	struct	Optab	Optab;
@@ -92,15 +75,6 @@ struct	Sym
 	Sym*	link;
 };
 
-#define SIGNINTERN	(1729*325*1729)
-
-struct	Autom
-{
-	Sym*	asym;
-	Auto*	link;
-	vlong	aoffset;
-	short	type;
-};
 struct	Optab
 {
 	ushort	as;
@@ -288,7 +262,6 @@ EXTERN	char*	library[50];
 EXTERN	char*	libraryobj[50];
 EXTERN	int	libraryp;
 EXTERN	int	xrefresolv;
-EXTERN	char*	hunk;
 EXTERN	char	inuxi1[1];
 EXTERN	char	inuxi2[2];
 EXTERN	char	inuxi4[4];
@@ -297,7 +270,6 @@ EXTERN	Prog*	lastp;
 EXTERN	long	lcsize;
 EXTERN	char	literal[32];
 EXTERN	int	nerrors;
-EXTERN	long	nhunk;
 EXTERN	vlong	instoffset;
 EXTERN	Opcross	opcross[8];
 EXTERN	char*	outfile;
@@ -306,7 +278,8 @@ EXTERN	uchar	repop[ALAST];
 EXTERN	long	symsize;
 EXTERN	Prog*	textp;
 EXTERN	long	textsize;
-EXTERN	long	thunk;
+EXTERN	char*	thestring;
+EXTERN	char	thechar;
 EXTERN	int	version;
 EXTERN	char	xcmp[C_GOK+1][C_GOK+1];
 EXTERN	Prog	zprg;
@@ -383,11 +356,14 @@ int	find1(long, int);
 char*	findlib(char*);
 void	follow(void);
 void	gethunk(void);
+void* halloc(usize);
 void	histtoauto(void);
+long	hunkspace(void);
 double	ieeedtod(Ieee*);
 long	ieeedtof(Ieee*);
 void	import(void);
 int	isnop(Prog*);
+int	isobjfile(char*);
 void	ldobj(int, long, char*);
 void	loadlib(void);
 void	listinit(void);
