@@ -177,27 +177,6 @@ asmb(void)
 }
 
 void
-strnput(char *s, int n)
-{
-	for(; *s; s++){
-		cput(*s);
-		n--;
-	}
-	for(; n > 0; n--)
-		cput(0);
-}
-
-void
-cput(int c)
-{
-	cbp[0] = c;
-	cbp++;
-	cbc--;
-	if(cbc <= 0)
-		cflush();
-}
-
-void
 wput(long l)
 {
 
@@ -261,27 +240,6 @@ llputl(vlong v)
 {
 	lputl(v);
 	lputl(v>>32);
-}
-
-void
-cflush(void)
-{
-	int n;
-
-	n = sizeof(buf.cbuf) - cbc;
-	if(n)
-		write(cout, buf.cbuf, n);
-	cbp = buf.cbuf;
-	cbc = sizeof(buf.cbuf);
-}
-
-void
-nopstat(char *f, Count *c)
-{
-	if(c->outof)
-	Bprint(&bso, "%s delay %ld/%ld (%.2f)\n", f,
-		c->outof - c->count, c->outof,
-		(double)(c->outof - c->count)/c->outof);
 }
 
 void
