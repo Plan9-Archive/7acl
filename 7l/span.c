@@ -148,7 +148,7 @@ span(void)
 	if(INITRND)
 		INITDAT = rnd(c, INITRND);
 	if(debug['v'])
-		Bprint(&bso, "tsize = %lux\n", textsize);
+		Bprint(&bso, "tsize = %#llux\n", textsize);
 	Bflush(&bso);
 }
 
