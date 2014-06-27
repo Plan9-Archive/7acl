@@ -1,17 +1,10 @@
 #include	"../ld/ld.h"
 #include	"../7c/7.out.h"
 
-typedef	struct	Adr	Adr;
 typedef	struct	Mask	Mask;
-typedef	struct	Prog	Prog;
 typedef	struct	Optab	Optab;
 typedef	struct	Oprang	Oprang;
 typedef	uchar	Opcross[32][2][32];
-typedef	struct	Count	Count;
-
-#define	P		((Prog*)0)
-#define	S		((Sym*)0)
-#define	TNAME		(curtext&&curtext->from.sym?curtext->from.sym->name:noname)
 
 struct	Adr
 {
@@ -70,7 +63,7 @@ struct	Sym
 	short	frame;
 	uchar	subtype;
 	ushort	file;
-	long	value;
+	vlong	value;
 	long	sig;
 	Sym*	link;
 };
@@ -90,11 +83,6 @@ struct	Oprang
 {
 	Optab*	start;
 	Optab*	stop;
-};
-struct	Count
-{
-	long	count;
-	long	outof;
 };
 struct	Mask
 {
@@ -201,13 +189,7 @@ enum
 	SYNC		= 1<<6,
 	NOSCHED		= 1<<7,
 
-	STRINGSZ	= 200,
-	NHASH		= 10007,
-	NHUNK		= 100000,
 	MINSIZ		= 64,
-	NENT		= 100,
-	MAXIO		= 8192,
-	MAXHIST		= 20,	/* limit of path elements for history symbols */
 
 	Roffset	= 22,		/* no. bits for offset in relocation address */
 	Rindex	= 10,		/* no. bits for index in relocation address */
@@ -215,19 +197,6 @@ enum
 	STACKALIGN = 16,	/* alignment of stack */
 	PCSZ=	8,	/* size of PC */
 };
-
-EXTERN union
-{
-	struct
-	{
-		uchar	obuf[MAXIO];			/* output buffer */
-		uchar	ibuf[MAXIO];			/* input buffer */
-	} u;
-	char	dbuf[1];
-} buf;
-
-#define	cbuf	u.obuf
-#define	xbuf	u.ibuf
 
 EXTERN	long	HEADR;			/* length of header */
 EXTERN	int	HEADTYPE;		/* type of header */
@@ -239,33 +208,15 @@ EXTERN	char*	INITENTRY;		/* entry point */
 EXTERN	long	autosize;
 EXTERN	Biobuf	bso;
 EXTERN	long	bsssize;
-EXTERN	int	cbc;
-EXTERN	uchar*	cbp;
-EXTERN	int	cout;
 EXTERN	Auto*	curauto;
 EXTERN	Auto*	curhist;
 EXTERN	Prog*	curp;
 EXTERN	Prog*	curtext;
 EXTERN	Prog*	datap;
 EXTERN	long	datsize;
-EXTERN	char	debug[128];
 EXTERN	Prog*	etextp;
 EXTERN	Prog*	firstp;
-EXTERN	char	fnuxi4[4];
-EXTERN	char	fnuxi8[8];
 EXTERN	char*	noname;
-EXTERN	Sym*	hash[NHASH];
-EXTERN	Sym*	histfrog[MAXHIST];
-EXTERN	int	histfrogp;
-EXTERN	int	histgen;
-EXTERN	char*	library[50];
-EXTERN	char*	libraryobj[50];
-EXTERN	int	libraryp;
-EXTERN	int	xrefresolv;
-EXTERN	char	inuxi1[1];
-EXTERN	char	inuxi2[2];
-EXTERN	char	inuxi4[4];
-EXTERN	uchar	inuxi8[8];
 EXTERN	Prog*	lastp;
 EXTERN	long	lcsize;
 EXTERN	char	literal[32];
@@ -277,43 +228,17 @@ EXTERN	vlong	pc;
 EXTERN	uchar	repop[ALAST];
 EXTERN	long	symsize;
 EXTERN	Prog*	textp;
-EXTERN	long	textsize;
-EXTERN	char*	thestring;
-EXTERN	char	thechar;
+EXTERN	vlong	textsize;
 EXTERN	int	version;
 EXTERN	char	xcmp[C_GOK+1][C_GOK+1];
 EXTERN	Prog	zprg;
 EXTERN	int	dtype;
 
-EXTERN	int	doexp, dlm;
-EXTERN	int	imports, nimports;
-EXTERN	int	exports, nexports;
-EXTERN	char*	EXPTAB;
-EXTERN	Prog	undefp;
-
-#define	UP	(&undefp)
-
 extern	char*	anames[];
 extern	Optab	optab[];
 
-void	addpool(Prog*, Adr*);
 EXTERN	Prog*	blitrl;
 EXTERN	Prog*	elitrl;
-
-EXTERN	Prog*	prog_div;
-EXTERN	Prog*	prog_divu;
-EXTERN	Prog*	prog_mod;
-EXTERN	Prog*	prog_modu;
-
-#pragma	varargck	type	"A"	int
-#pragma	varargck	type	"A"	uint
-#pragma	varargck	type	"C"	int
-#pragma	varargck	type	"D"	Adr*
-#pragma	varargck	type	"N"	Adr*
-#pragma	varargck	type	"P"	Prog*
-#pragma	varargck	type	"S"	char*
-
-#pragma	varargck	argpos	diag 1
 
 int	Aconv(Fmt*);
 int	Cconv(Fmt*);
@@ -322,88 +247,48 @@ int	Nconv(Fmt*);
 int	Pconv(Fmt*);
 int	Sconv(Fmt*);
 int	aclass(Adr*);
-void	addhist(long, int);
-void	addlibpath(char*);
+void	addpool(Prog*, Adr*);
 void	append(Prog*, Prog*);
 void	asmb(void);
 void	asmdyn(void);
 void	asmlc(void);
 void	asmout(Prog*, Optab*);
 void	asmsym(void);
-vlong	atolwhex(char*);
-Prog*	brloop(Prog*);
 void	buildop(void);
 void	buildrep(int, int);
-void	cflush(void);
-void	ckoff(Sym*, long);
 int	chipfloat(Ieee*);
 int	cmp(int, int);
 int	compound(Prog*);
-double	cputime(void);
 void	datblk(long, long, int);
-void	diag(char*, ...);
-void	divsig(void);
-void	dodata(void);
 void	doprof1(void);
 void	doprof2(void);
 void	dynreloc(Sym*, long, int);
 vlong	entryvalue(void);
-void	errorexit(void);
-void	exchange(Prog*);
-void	export(void);
-int	fileexists(char*);
-int	find1(long, int);
-char*	findlib(char*);
-void	follow(void);
-void	gethunk(void);
-void* halloc(usize);
-void	histtoauto(void);
-long	hunkspace(void);
-double	ieeedtod(Ieee*);
-long	ieeedtof(Ieee*);
-void	import(void);
 int	isnop(Prog*);
-int	isobjfile(char*);
 void	ldobj(int, long, char*);
-void	loadlib(void);
 void	listinit(void);
-Sym*	lookup(char*, int);
-void	cput(int);
 void	llput(vlong);
 void	llputl(vlong);
 void	lput(long);
 void	lputl(long);
-void	mkfwd(void);
 int	movcon(vlong);
-void*	mysbrk(ulong);
 void	names(void);
 void	nocache(Prog*);
 void	nuxiinit(void);
-void	objfile(char*);
 vlong	offsetshift(vlong, int);
 Optab*	oplook(Prog*);
-void	patch(void);
-void	prasm(Prog*);
 void	prepend(Prog*, Prog*);
-Prog*	prg(void);
 int	pseudo(Prog*);
 void	putsymb(char*, int, vlong, int);
-void	readundefs(char*, int);
 long	regoff(Adr*);
 int	relinv(int);
-vlong	rnd(vlong, long);
 void	span(void);
-void	strnput(char*, int);
-void	undef(void);
-void	undefsym(Sym*);
 void	wput(long);
 void	wputl(long);
-void	xdefine(char*, int, long);
-void	xfol(Prog*);
-void	zerosig(char*);
 void	noops(void);
 Mask*	findmask(uvlong);
 
+/* for ../ld */
 #define	isbranch(a)	((a) == AB)
 #define	iscall(a)	((a) == ABL)
 #define	isreturn(a)	((a) == ARETURN || (a) == ARET || (a) == AERET)
