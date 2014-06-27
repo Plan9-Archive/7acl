@@ -198,6 +198,24 @@ findlib(char *file)
 }
 
 void
+addlibroot(void)
+{
+	char *a;
+	char name[LIBNAMELEN];
+
+	a = getenv("ccroot");
+	if(a != nil && *a != '\0') {
+		if(!fileexists(a)) {
+			diag("nonexistent $ccroot: %s", a);
+			errorexit();
+		}
+	}else
+		a = "";
+	snprint(name, sizeof(name), "%s/%s/lib", a, thestring);
+	addlibpath(name);
+}
+
+void
 addlib(char *obj)
 {
 	char fn1[LIBNAMELEN], fn2[LIBNAMELEN], comp[LIBNAMELEN], *p, *name;
