@@ -315,43 +315,6 @@ noops(void)
 	}
 }
 
-static void
-sigdiv(char *n)
-{
-	Sym *s;
-
-	s = lookup(n, 0);
-	if(s->type == STEXT){
-		if(s->sig == 0)
-			s->sig = SIGNINTERN;
-	}
-	else if(s->type == 0 || s->type == SXREF)
-		s->type = SUNDEF;
-}
-
-void
-divsig(void)
-{
-	sigdiv("_div");
-	sigdiv("_divu");
-	sigdiv("_mod");
-	sigdiv("_modu");
-}
-
-static void
-sdiv(Sym *s)
-{
-	if(s->type == 0 || s->type == SXREF){
-		/* undefsym(s); */
-		s->type = SXREF;
-		if(s->sig == 0)
-			s->sig = SIGNINTERN;
-		s->subtype = SIMPORT;
-	}
-	else if(s->type != STEXT)
-		diag("undefined: %s", s->name);
-}
-
 void
 nocache(Prog *p)
 {
