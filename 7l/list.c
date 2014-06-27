@@ -9,6 +9,7 @@ listinit(void)
 	fmtinstall('P', Pconv);
 	fmtinstall('S', Sconv);
 	fmtinstall('N', Nconv);
+	fmtinstall('R', Rconv);
 }
 
 int
@@ -280,42 +281,14 @@ Nconv(Fmt *fp)
 }
 
 int
-Sconv(Fmt *fp)
+Rconv(Fmt *fp)
 {
-	int i, c;
-	char str[STRINGSZ], *p, *a;
+	char *s;
+	int a;
 
-	a = va_arg(fp->args, char*);
-	p = str;
-	for(i=0; i<sizeof(long); i++) {
-		c = a[i] & 0xff;
-		if(c >= 'a' && c <= 'z' ||
-		   c >= 'A' && c <= 'Z' ||
-		   c >= '0' && c <= '9' ||
-		   c == ' ' || c == '%') {
-			*p++ = c;
-			continue;
-		}
-		*p++ = '\\';
-		switch(c) {
-		case 0:
-			*p++ = 'z';
-			continue;
-		case '\\':
-		case '"':
-			*p++ = c;
-			continue;
-		case '\n':
-			*p++ = 'n';
-			continue;
-		case '\t':
-			*p++ = 't';
-			continue;
-		}
-		*p++ = (c>>6) + '0';
-		*p++ = ((c>>3) & 7) + '0';
-		*p++ = (c & 7) + '0';
-	}
-	*p = 0;
-	return fmtstrcpy(fp, str);
+	a = va_arg(fp->args, int);
+	s = "C_??";
+	if(a >= C_NONE && a <= C_NCLASS)
+		s = cnames[a];
+	return fmtstrcpy(fp, s);
 }
