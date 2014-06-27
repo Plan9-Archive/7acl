@@ -178,6 +178,7 @@ enum
 	C_VREG,
 
 	C_GOK,
+	C_NCLASS,	/* must be last */
 
 /* mark flags */
 	FOLL		= 1<<0,
@@ -230,11 +231,12 @@ EXTERN	long	symsize;
 EXTERN	Prog*	textp;
 EXTERN	vlong	textsize;
 EXTERN	int	version;
-EXTERN	char	xcmp[C_GOK+1][C_GOK+1];
+EXTERN	char	xcmp[C_NCLASS][C_NCLASS];
 EXTERN	Prog	zprg;
 EXTERN	int	dtype;
 
 extern	char*	anames[];
+extern	char*	cnames[];
 extern	Optab	optab[];
 
 EXTERN	Prog*	blitrl;
@@ -245,10 +247,9 @@ int	Cconv(Fmt*);
 int	Dconv(Fmt*);
 int	Nconv(Fmt*);
 int	Pconv(Fmt*);
-int	Sconv(Fmt*);
+int	Rconv(Fmt*);
 int	aclass(Adr*);
 void	addpool(Prog*, Adr*);
-void	append(Prog*, Prog*);
 void	asmb(void);
 void	asmdyn(void);
 void	asmlc(void);
@@ -277,7 +278,6 @@ void	nocache(Prog*);
 void	nuxiinit(void);
 vlong	offsetshift(vlong, int);
 Optab*	oplook(Prog*);
-void	prepend(Prog*, Prog*);
 int	pseudo(Prog*);
 void	putsymb(char*, int, vlong, int);
 long	regoff(Adr*);
@@ -287,6 +287,8 @@ void	wput(long);
 void	wputl(long);
 void	noops(void);
 Mask*	findmask(uvlong);
+
+#pragma	varargck	type	"R"	int
 
 /* for ../ld */
 #define	isbranch(a)	((a) == AB)
