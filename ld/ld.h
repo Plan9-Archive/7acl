@@ -94,6 +94,7 @@ EXTERN	Prog	undefp;
 
 #define	UP	(&undefp)
 
+int	Sconv(Fmt*);
 void	addhist(long, int);
 void	addlib(char*);
 void	addlibpath(char*);
@@ -140,7 +141,7 @@ vlong	rnd(vlong, long);
 void	strnput(char*, int);
 void	undef(void);
 void	undefsym(Sym*);
-void	xdefine(char*, int, long);
+void	xdefine(char*, int, vlong);
 void	xfol(Prog*);
 void	zerosig(char*);
 

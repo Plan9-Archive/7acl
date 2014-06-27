@@ -43,6 +43,47 @@ prasm(Prog *p)
 	print("%P\n", p);
 }
 
+int
+Sconv(Fmt *fp)
+{
+	int i, c;
+	char str[STRINGSZ], *p, *a;
+
+	a = va_arg(fp->args, char*);
+	p = str;
+	for(i=0; i<sizeof(long); i++) {
+		c = a[i] & 0xff;
+		if(c >= 'a' && c <= 'z' ||
+		   c >= 'A' && c <= 'Z' ||
+		   c >= '0' && c <= '9' ||
+		   c == ' ' || c == '%') {
+			*p++ = c;
+			continue;
+		}
+		*p++ = '\\';
+		switch(c) {
+		case 0:
+			*p++ = 'z';
+			continue;
+		case '\\':
+		case '"':
+			*p++ = c;
+			continue;
+		case '\n':
+			*p++ = 'n';
+			continue;
+		case '\t':
+			*p++ = 't';
+			continue;
+		}
+		*p++ = (c>>6) + '0';
+		*p++ = ((c>>3) & 7) + '0';
+		*p++ = (c & 7) + '0';
+	}
+	*p = 0;
+	return fmtstrcpy(fp, str);
+}
+
 void
 nopstat(char *f, Count *c)
 {
@@ -50,6 +91,18 @@ nopstat(char *f, Count *c)
 	Bprint(&bso, "%s delay %ld/%ld (%.2f)\n", f,
 		c->outof - c->count, c->outof,
 		(double)(c->outof - c->count)/c->outof);
+}
+
+void
+xdefine(char *p, int t, vlong v)
+{
+	Sym *s;
+
+	s = lookup(p, 0);
+	if(s->type == 0 || s->type == SXREF) {
+		s->type = t;
+		s->value = v;
+	}
 }
 
 void
