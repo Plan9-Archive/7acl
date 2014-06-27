@@ -210,8 +210,6 @@ main(int argc, char *argv[])
 			INITRND = 8;
 			INITENTRY = EXPTAB;
 		}
-		else
-			divsig();
 		export();
 	}
 	patch();
