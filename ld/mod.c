@@ -75,7 +75,7 @@ import(void)
 		for(s = hash[i]; s != S; s = s->link)
 			if(s->sig != 0 && s->type == SXREF && (nimports == 0 || s->subtype == SIMPORT)){
 				undefsym(s);
-				Bprint(&bso, "IMPORT: %s sig=%lux v=%lld\n", s->name, s->sig, s->value);
+				Bprint(&bso, "IMPORT: %s sig=%lux v=%lld\n", s->name, s->sig, (vlong)s->value);
 			}
 }
 

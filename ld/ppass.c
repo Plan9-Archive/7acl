@@ -23,7 +23,7 @@ dodata(void)
 		v = p->from.offset + p->reg;
 		if(v > s->value)
 			diag("initialize bounds (%lld): %s\n%P",
-				s->value, s->name, p);
+				(vlong)s->value, s->name, p);
 	}
 
 	if(debug['t']) {
