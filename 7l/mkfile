@@ -1,10 +1,16 @@
 </$objtype/mkfile
+HOST=Plan9
 
 TARG=7l
 OFILES=\
+	$HOST.$O\
 	asm.$O\
 	asmout.$O\
 	bits.$O\
+	cnam.$O\
+	dyn.$O\
+	elf.$O\
+	enam.$O\
 	falloc.$O\
 	list.$O\
 	mod.$O\
@@ -13,12 +19,8 @@ OFILES=\
 	optab.$O\
 	pass.$O\
 	pobj.$O\
-	ppass.$O\
 	span.$O\
 	sub.$O\
-	enam.$O\
-	Plan9.$O\
-	elf.$O\
 
 HFILES=\
 	l.h\
@@ -33,6 +35,9 @@ CFLAGS=$CFLAGS -. -I.
 ../7c/enam.c: ../7c/7.out.h
 	@ { cd ../7c; mk enam.c }
 
+cnam.c:	l.h
+	rc ../ld/mkcname
+
 enam.$O:	../7c/enam.c
 	$CC $CFLAGS ../7c/enam.c
 %.$O:	../ld/%.c
@@ -40,3 +45,4 @@ enam.$O:	../7c/enam.c
 
 x:V:	$O.out
 	$O.out -la -o/dev/null x.7
+
