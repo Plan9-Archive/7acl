@@ -22,7 +22,7 @@ dodata(void)
 				s->type, s->name, p);
 		v = p->from.offset + p->reg;
 		if(v > s->value)
-			diag("initialize bounds (%ld): %s\n%P",
+			diag("initialize bounds (%lld): %s\n%P",
 				s->value, s->name, p);
 	}
 
