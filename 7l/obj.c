@@ -28,7 +28,6 @@ main(int argc, char *argv[])
 {
 	int c;
 	char *a;
-	char name[LIBNAMELEN];
 
 	Binit(&bso, 1, OWRITE);
 	cout = -1;
@@ -103,16 +102,7 @@ main(int argc, char *argv[])
 		usage();
 	if(!debug['9'] && !debug['U'] && !debug['B'])
 		debug[DEFAULT] = 1;
-	a = getenv("ccroot");
-	if(a != nil && *a != '\0') {
-		if(!fileexists(a)) {
-			diag("nonexistent $ccroot: %s", a);
-			errorexit();
-		}
-	}else
-		a = "";
-	snprint(name, sizeof(name), "%s/%s/lib", a, thestring);
-	addlibpath(name);
+	addlibroot();
 	if(HEADTYPE == -1) {
 		if(debug['U'])
 			HEADTYPE = 0;
