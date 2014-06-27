@@ -5,6 +5,27 @@ static	usize	tothunk;
 static	char*	hunk;
 
 void
+diag(char *fmt, ...)
+{
+	char buf[STRINGSZ], *tn;
+	va_list arg;
+
+	tn = "??none??";
+	if(curtext != P && curtext->from.sym != S)
+		tn = curtext->from.sym->name;
+	va_start(arg, fmt);
+	vseprint(buf, buf+sizeof(buf), fmt, arg);
+	va_end(arg);
+	print("%s: %s\n", tn, buf);
+
+	nerrors++;
+	if(nerrors > 10) {
+		print("too many errors\n");
+		errorexit();
+	}
+}
+
+void
 errorexit(void)
 {
 
@@ -14,6 +35,21 @@ errorexit(void)
 		exits("error");
 	}
 	exits(0);
+}
+
+void
+prasm(Prog *p)
+{
+	print("%P\n", p);
+}
+
+void
+nopstat(char *f, Count *c)
+{
+	if(c->outof)
+	Bprint(&bso, "%s delay %ld/%ld (%.2f)\n", f,
+		c->outof - c->count, c->outof,
+		(double)(c->outof - c->count)/c->outof);
 }
 
 void
@@ -139,4 +175,37 @@ long
 hunkspace(void)
 {
 	return tothunk;
+}
+
+void
+strnput(char *s, int n)
+{
+	for(; *s; s++){
+		cput(*s);
+		n--;
+	}
+	for(; n > 0; n--)
+		cput(0);
+}
+
+void
+cput(int c)
+{
+	cbp[0] = c;
+	cbp++;
+	cbc--;
+	if(cbc <= 0)
+		cflush();
+}
+
+void
+cflush(void)
+{
+	int n;
+
+	n = sizeof(buf.cbuf) - cbc;
+	if(n)
+		write(cout, buf.cbuf, n);
+	cbp = buf.cbuf;
+	cbc = sizeof(buf.cbuf);
 }
