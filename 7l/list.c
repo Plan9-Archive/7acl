@@ -11,12 +11,6 @@ listinit(void)
 	fmtinstall('N', Nconv);
 }
 
-void
-prasm(Prog *p)
-{
-	print("%P\n", p);
-}
-
 int
 Pconv(Fmt *fp)
 {
@@ -324,25 +318,4 @@ Sconv(Fmt *fp)
 	}
 	*p = 0;
 	return fmtstrcpy(fp, str);
-}
-
-void
-diag(char *fmt, ...)
-{
-	char buf[STRINGSZ], *tn;
-	va_list arg;
-
-	tn = "??none??";
-	if(curtext != P && curtext->from.sym != S)
-		tn = curtext->from.sym->name;
-	va_start(arg, fmt);
-	vseprint(buf, buf+sizeof(buf), fmt, arg);
-	va_end(arg);
-	print("%s: %s\n", tn, buf);
-
-	nerrors++;
-	if(nerrors > 10) {
-		print("too many errors\n");
-		errorexit();
-	}
 }
