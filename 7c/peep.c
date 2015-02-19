@@ -942,7 +942,7 @@ copyu(Prog *p, Adr *v, Adr *s)
 
 	default:
 		if(debug['P'])
-			print(" (???)");
+			print(" (unk)");
 		return 2;
 
 	case ANOP:	/* read, write */
