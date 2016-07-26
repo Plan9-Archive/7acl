@@ -179,12 +179,15 @@ tcomo(Node *n, int f)
 		arith(n, 0);
 		while(n->left->op == OCAST)
 			n->left = n->left->left;
-		if(!sametype(t, n->type) && !mixedasop(t, n->type)) {
-			r = new1(OCAST, n->right, Z);
-			r->type = t;
-			n->right = r;
+		if(!mixedasop(t, n->type)) {
+			if(!sametype(t, n->type)) {
+				r = new1(OCAST, n->right, Z);
+				r->type = t;
+				n->right = r;
+				n->type = t;
+			}
+		}else
 			n->type = t;
-		}
 		break;
 
 	case OASMUL:
@@ -206,12 +209,15 @@ tcomo(Node *n, int f)
 		arith(n, 0);
 		while(n->left->op == OCAST)
 			n->left = n->left->left;
-		if(!sametype(t, n->type) && !mixedasop(t, n->type)) {
-			r = new1(OCAST, n->right, Z);
-			r->type = t;
-			n->right = r;
+		if(!mixedasop(t, n->type)) {
+			if(!sametype(t, n->type)) {
+				r = new1(OCAST, n->right, Z);
+				r->type = t;
+				n->right = r;
+				n->type = t;
+			}
+		}else
 			n->type = t;
-		}
 		if(typeu[n->type->etype]) {
 			if(n->op == OASDIV)
 				n->op = OASLDIV;
