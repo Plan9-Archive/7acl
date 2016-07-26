@@ -287,28 +287,22 @@ cgenrel(Node *n, Node *nn, int inrel)
 				reglcgen(&nod2, l, Z);
 			else
 				nod2 = *l;
-			regalloc(&nod, n, nn);
+			regalloc(&nod, r, nn);
 			cgen(r, &nod);
 		} else {
-			regalloc(&nod, n, nn);
+			regalloc(&nod, r, nn);
 			cgen(r, &nod);
 			if(l->addable < INDEXED)
 				reglcgen(&nod2, l, Z);
 			else
 				nod2 = *l;
 		}
-		regalloc(&nod1, n, Z);
-		gopcode(OAS, &nod2, Z, &nod1);
-		if(nod1.type->etype != nod.type->etype){
-			regalloc(&nod3, &nod, Z);
-			gmove(&nod1, &nod3);
-			regfree(&nod1);
-			nod1 = nod3;
-		}
+		regalloc(&nod1, &nod, nod1.type==nod2.type? nn: Z);
+		gmove(&nod2, &nod1);
 		gopcode(o, &nod, &nod1, &nod);
 		gmove(&nod, &nod2);
 		if(nn != Z)
-			gmove(&nod, nn);
+			gmove(&nod2, nn);
 		regfree(&nod);
 		regfree(&nod1);
 		if(l->addable < INDEXED)
